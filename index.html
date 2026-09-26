@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartTuner — Mockup interactivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300..700&family=Roboto+Mono:wght@400;500&family=Abril+Fatface&family=Noto+Music&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="page-head">
+  <div class="eyebrow"><span class="dot"></span>SmartTuner · Sistema de diseño</div>
+  <h1>Mockup interactivo de la app</h1>
+  <p>Pantallas, visor, arco de luces e iconos construidos con los elementos del paquete <em>Visor, arco e iconos</em> y el frontend Compose de SmartTuner. Toca los controles del teléfono; el panel de la derecha hace de micrófono. El botón de sol/luna alterna los dos modos: neón lima sobre tinta y papel crema con tinta marrón.</p>
+</header>
+
+<main class="stage">
+  <div class="phone-slot" id="phoneSlot">
+    <div class="phone" id="phone">
+      <div class="phone-btn vol-up"></div>
+      <div class="phone-btn vol-down"></div>
+      <div class="phone-btn power"></div>
+
+      <div class="screen" id="screen">
+        <!-- Barra de estado -->
+        <div class="status-bar">
+          <span class="clock" id="clock">9:41</span>
+          <span class="punch"></span>
+          <span class="sys-icons">
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21 1 8.5C4 5.9 7.8 4.5 12 4.5s8 1.4 11 4L12 21Z"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M2 22h20V2L2 22Z"/></svg>
+            <svg width="20" height="16" viewBox="0 0 28 16" aria-hidden="true"><rect x="1" y="2" width="22" height="12" rx="3" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="3.5" y="4.5" width="15" height="7" rx="1.5" fill="currentColor"/><rect x="24.5" y="6" width="2" height="4" rx="1" fill="currentColor"/></svg>
+          </span>
+        </div>
+
+        <div class="app" id="app">
+          <!-- =================== AFINADOR CROMÁTICO =================== -->
+          <section class="screen-layer" id="chromaticScreen">
+            <div class="col">
+              <div class="top-bar">
+                <button class="logo spin" id="appLogo" aria-label="SmartTuner"><img alt="" data-logo></button>
+                <div class="brand">
+                  <div class="app-title">SmartTuner</div>
+                  <div class="app-sub">Afinador cromático</div>
+                </div>
+                <div class="segmented" role="radiogroup" aria-label="Alternar entre sostenidos y bemoles">
+                  <button role="radio" data-acc="SHARPS">♯</button>
+                  <button role="radio" data-acc="FLATS">♭</button>
+                </div>
+                <button class="icon-circle" data-toggle-theme aria-label="Cambiar al modo claro"><svg class="mode-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"></svg></button>
+              </div>
+
+              <div class="weight"></div>
+              <div class="visor" data-visor="chromatic"></div>
+              <div class="gap-md"></div>
+              <div class="stats" data-stats="chromatic"></div>
+              <div class="gap-md"></div>
+              <div class="status-text" data-status="chromatic"></div>
+              <div class="weight"></div>
+
+              <canvas class="note-strip" id="noteStrip"></canvas>
+              <div class="gap-md" id="stripGap"></div>
+              <div class="card staff-card">
+                <div class="staff-head">
+                  <span class="overline">PENTAGRAMA</span>
+                  <span class="clef-name" id="clefName">Clave de Sol</span>
+                </div>
+                <canvas class="staff" id="staff"></canvas>
+              </div>
+              <div class="weight"></div>
+
+              <div class="bottom-bar">
+                <button class="btn-primary touch" id="identifyBtn"><span class="lead">✦</span><span>Identificar instrumento</span></button>
+                <div class="stepper">
+                  <button class="step" data-ref="-1" aria-label="Bajar frecuencia de referencia">−</button>
+                  <span class="step-label" data-ref-label>La 440</span>
+                  <button class="step" data-ref="1" aria-label="Subir frecuencia de referencia">+</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- =================== AFINACIÓN POR INSTRUMENTO =================== -->
+          <section class="screen-layer hidden-right" id="instrumentScreen">
+            <div class="col">
+              <div class="inst-header">
+                <button class="icon-circle" id="backBtn" aria-label="Volver al afinador cromático">
+                  <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.88 1.92 4.48 8l6.4 6.08" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="neon spin avatar" id="instAvatar" aria-label=""></button>
+                <div class="inst-titles">
+                  <div class="inst-name" id="instName">Guitarra</div>
+                  <div class="inst-meta">
+                    <button class="tuning-chip" id="tuningChip" aria-label="Cambiar el tipo de instrumento"><span id="tuningChipName">6 cuerdas</span><span>▾</span></button>
+                    <span class="ref-note" data-ref-label>La 440</span>
+                  </div>
+                </div>
+                <button class="icon-circle" data-toggle-theme aria-label="Cambiar al modo claro"><svg class="mode-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"></svg></button>
+              </div>
+
+              <div class="weight"></div>
+              <div class="visor" data-visor="instrument"></div>
+              <div class="gap-md"></div>
+              <div class="stats" data-stats="instrument"></div>
+              <div class="gap-md"></div>
+              <div class="status-text" data-status="instrument"></div>
+              <div class="weight"></div>
+
+              <div class="strings" id="strings" role="radiogroup"></div>
+              <div class="gap-md"></div>
+              <div class="footer-hint" id="footerHint"></div>
+              <div class="weight"></div>
+            </div>
+          </section>
+
+          <!-- =================== HOJAS MODALES =================== -->
+          <div class="scrim" id="scrim"></div>
+          <div class="sheet" id="sheet" role="dialog" aria-modal="true">
+            <div class="drag-zone" id="dragZone"><div class="handle"></div></div>
+            <div class="sheet-body" id="sheetBody"></div>
+          </div>
+        </div>
+
+        <div class="nav-bar"><span class="gesture-pill"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =================== SIMULADOR (fuera del teléfono) =================== -->
+  <aside class="sim" id="sim">
+    <div class="sim-head">
+      <h2>Simulador de sonido</h2>
+      <label class="switch"><input type="checkbox" id="simOn" checked><span class="track"><span class="thumb"></span></span><span class="switch-label" id="simOnLabel">Sonando</span></label>
+    </div>
+    <p class="sim-note">El mockup no usa el micrófono. Elige aquí qué nota "llega" al afinador y gira la clavija con la desviación.</p>
+
+    <div class="sim-block" id="simStringsBlock" hidden>
+      <div class="sim-label">Tocar una cuerda al aire</div>
+      <div class="sim-chips" id="simStrings"></div>
+    </div>
+
+    <div class="sim-block">
+      <div class="sim-label">Nota que suena</div>
+      <div class="sim-note-row">
+        <button class="sim-step" id="simDown" aria-label="Bajar un semitono">−</button>
+        <div class="sim-note-val"><span id="simNote">A3</span><small id="simHz">220.0 Hz</small></div>
+        <button class="sim-step" id="simUp" aria-label="Subir un semitono">+</button>
+      </div>
+    </div>
+
+    <div class="sim-block">
+      <div class="sim-label"><span>Desviación (clavija)</span><span class="sim-cents" id="simCents">+12 ¢</span></div>
+      <input type="range" id="simSlider" min="-50" max="50" step="1" value="12">
+      <div class="sim-scale"><span>−50 ¢ grave</span><span>0</span><span>aguda +50 ¢</span></div>
+    </div>
+
+    <div class="sim-actions">
+      <button class="sim-btn primary" id="simTune">Afinar poco a poco</button>
+      <button class="sim-btn" id="simDetune">Desafinar</button>
+    </div>
+
+    <div class="sim-legend">
+      <div><i style="background:var(--in-tune)"></i>±5 ¢ afinado</div>
+      <div><i style="background:var(--nearly)"></i>hasta 20 ¢ cerca</div>
+      <div><i style="background:var(--out-tune)"></i>más de 20 ¢ lejos</div>
+    </div>
+
+    <ol class="sim-flow" id="simFlow">
+      <li>Pulsa <b>Identificar instrumento</b>: aparece la lista de instrumentos y sus afinaciones.</li>
+      <li>Elige instrumento y tipo, y pulsa <b>Aceptar</b>.</li>
+      <li>Toca una tarjeta de cuerda para oír su referencia y afínala con el simulador.</li>
+      <li><kbd>Esc</kbd> hace de botón Atrás de Android.</li>
+    </ol>
+  </aside>
+</main>
+
+<section class="modes" id="modes">
+  <h2>Los dos modos</h2>
+  <p class="modes-intro">El modo claro no es el oscuro repintado: cambia el visor, lo que se muestra y cómo se dibuja. Los tokens salen de <code>DarkTunerColors</code> y <code>LightTunerColors</code> (Tokens.kt).</p>
+
+  <div class="modes-grid">
+    <article class="mode-card">
+      <header><span class="mode-dot dark"></span><h3>Oscuro · neón lima sobre tinta</h3></header>
+      <div class="tokens" data-tokens="dark"></div>
+    </article>
+    <article class="mode-card">
+      <header><span class="mode-dot light"></span><h3>Claro · papel crema y tinta marrón</h3></header>
+      <div class="tokens" data-tokens="light"></div>
+    </article>
+  </div>
+
+  <div class="modes-grid diffs">
+    <article class="mode-card">
+      <h4>Qué cambia en el modo claro</h4>
+      <ul>
+        <li><b>Visor:</b> el arco de luces y los siete segmentos dejan paso al <b>PaperDial</b>: la nota escrita en Abril Fatface dentro de un aro sin relleno (168 dp) y una regleta recta de ±50 ¢ con una aguja que crece al dar en la nota.</li>
+        <li><b>Hercios:</b> viajan bajo la aguja, así que la columna FRECUENCIA desaparece de las lecturas.</li>
+        <li><b>Carrusel cromático:</b> se retira; ese papel ya lo hace la regleta.</li>
+        <li><b>Brillos:</b> el token <code>glow</code> pasa de 1 a 0 y apaga halos, auras y el núcleo blanco de las luces.</li>
+        <li><b>Cuerdas:</b> sin recuadro ni fondo; el estado lo dice el color de la nota, y la onda al afinar es circular en vez de rectangular.</li>
+        <li><b>Iconos y logo:</b> el neón se cambia por el mismo dibujo a trazo, teñido con el acento.</li>
+      </ul>
+    </article>
+    <article class="mode-card">
+      <h4>Reglas que se mantienen</h4>
+      <ul>
+        <li><b>Significado del color:</b> afinado / cerca / lejos siguen siendo verde, ámbar y coral, pero en claro bajan de tono (<code>#1F7043</code>, <code>#8E6110</code>, <code>#B23A32</code>) para pasar de 4.5:1 de contraste sobre el papel.</li>
+        <li><b>Umbrales:</b> ±5 ¢ afinado, degradado hasta 20 ¢ y de ahí a 50 ¢, idénticos en ambos modos.</li>
+        <li><b>Espaciado, formas y tamaños:</b> los mismos tokens; solo cambian colores y qué se dibuja.</li>
+        <li><b>Navegación:</b> dos pantallas y tres hojas; el botón de sol/luna ocupa el sitio del antiguo selector de color, que ya no existe.</li>
+        <li><b>Arranque:</b> la app sigue al modo del sistema hasta que alguien toca el botón; a partir de ahí manda esa elección.</li>
+      </ul>
+    </article>
+  </div>
+</section>
+
+<script src="app.js"></script>
+</body>
+</html>
