@@ -15,13 +15,22 @@
   <div class="eyebrow"><span class="dot"></span>SmartTuner · Sistema de diseño</div>
   <h1>Mockup interactivo de la app</h1>
   <p>Pantallas, visor, arco de luces e iconos construidos con los elementos del paquete <em>Visor, arco e iconos</em> y el frontend Compose de SmartTuner. Toca los controles del teléfono; el panel de la derecha hace de micrófono. El botón de sol/luna alterna los dos modos: neón lima sobre tinta y papel crema con tinta marrón.</p>
+  <div class="head-actions">
+    <!-- /releases/latest/download/ siempre sirve la última versión: publicar otra no obliga a tocar esta página. -->
+    <a class="download" href="https://github.com/Andres-Maya/SmartTuner/releases/latest/download/SmartTuner.apk">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 3v11m0 0 4.5-4.5M12 14l-4.5-4.5"/><path d="M4 16v2.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V16"/>
+      </svg>
+      Descargar APK
+    </a>
+    <span class="download-meta">v1.0 · 63 MB · Android 7 o superior · build de pruebas firmada con la clave de depuración</span>
+  </div>
 </header>
 
 <main class="stage">
   <div class="phone-slot" id="phoneSlot">
     <div class="phone" id="phone">
       <div class="phone-btn vol-up"></div>
-      <div class="phone-btn vol-down"></div>
       <div class="phone-btn power"></div>
 
       <div class="screen" id="screen">
@@ -168,7 +177,7 @@
       <div><i style="background:var(--out-tune)"></i>más de 20 ¢ lejos</div>
     </div>
 
-    <ol class="sim-flow" id="simFlow">
+    <ol class="sim-flow">
       <li>Pulsa <b>Identificar instrumento</b>: aparece la lista de instrumentos y sus afinaciones.</li>
       <li>Elige instrumento y tipo, y pulsa <b>Aceptar</b>.</li>
       <li>Toca una tarjeta de cuerda para oír su referencia y afínala con el simulador.</li>
@@ -177,7 +186,7 @@
   </aside>
 </main>
 
-<section class="modes" id="modes">
+<section class="modes">
   <h2>Los dos modos</h2>
   <p class="modes-intro">El modo claro no es el oscuro repintado: cambia el visor, lo que se muestra y cómo se dibuja. Los tokens salen de <code>DarkTunerColors</code> y <code>LightTunerColors</code> (Tokens.kt).</p>
 

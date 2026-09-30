@@ -1,6 +1,6 @@
 /* SmartTuner — mockup interactivo.
    Los valores salen de Tokens.kt (TunerSpacing, TunerSizes, TunerShapes, TunerTypography).
-   Los colores del tema los escribe app.js en :root a partir del acento (ThemePalette). */
+   Los colores los escribe app.js en :root según el modo (DarkTunerColors / LightTunerColors). */
 
 :root {
   /* Valores del modo oscuro (DarkTunerColors). app.js reescribe estos tokens al cambiar de modo. */
@@ -18,9 +18,6 @@
   --in-tune: #3DDC97;
   --nearly: #FFC857;
   --out-tune: #FF6B6B;
-
-  /* espaciado */
-  --xxs: 2px; --xs: 4px; --sm: 8px; --md: 12px; --lg: 16px; --xl: 20px; --xxl: 24px; --xxxl: 32px;
 
   --font: Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "Roboto Mono", ui-monospace, monospace;
@@ -55,6 +52,19 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .page-head h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 10px 0 8px; font-weight: 700; }
 .page-head p { color: var(--muted); max-width: 720px; font-size: 16px; line-height: 24px; margin: 0; }
 
+.head-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 20px; }
+.download {
+  display: inline-flex; align-items: center; gap: 10px;
+  height: 48px; padding: 0 22px; border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-alt));
+  color: var(--on-accent); font-size: 16px; font-weight: 600; text-decoration: none;
+  transition: filter 150ms, transform 80ms;
+}
+.download:hover { filter: brightness(1.07); }
+.download:active { transform: scale(.97); }
+.download:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.download-meta { color: var(--muted); font-size: 13px; line-height: 19px; max-width: 420px; }
+
 .stage {
   max-width: 1120px; margin: 0 auto; padding: 28px 24px 64px;
   display: flex; gap: 40px; align-items: flex-start; justify-content: center; flex-wrap: wrap;
@@ -78,7 +88,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .phone-btn { position: absolute; width: 4px; border-radius: 2px; background: #26272d; right: -3px; }
 .phone-btn.power { top: 190px; height: 64px; }
 .phone-btn.vol-up { top: 290px; height: 90px; }
-.phone-btn.vol-down { display: none; }
 
 .screen {
   position: relative;
@@ -112,7 +121,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   will-change: transform, opacity;
 }
 .screen-layer.hidden-right { transform: translateX(100%); opacity: 0; pointer-events: none; }
-.screen-layer.hidden-left { transform: translateX(-33.3%); opacity: 0; pointer-events: none; }
 .screen-layer.no-anim { transition: none; }
 
 /* ScreenColumn: 20 horizontal, 12 vertical */
@@ -149,11 +157,11 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   background: var(--surface-high); color: var(--text);
   position: relative; overflow: hidden;
 }
-.icon-circle::after, .touch::after, .step::after, .option::after, .string-card::after, .palette-opt::after, .ghost::after, .btn-secondary::after, .tuning-chip::after {
+.icon-circle::after, .touch::after, .step::after, .option::after, .string-card::after, .ghost::after, .btn-secondary::after, .tuning-chip::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit;
   background: currentColor; opacity: 0; transition: opacity 150ms; pointer-events: none;
 }
-.icon-circle:active::after, .touch:active::after, .step:active::after, .option:active::after, .string-card:active::after, .palette-opt:active::after, .ghost:active::after, .btn-secondary:active::after, .tuning-chip:active::after { opacity: .12; }
+.icon-circle:active::after, .touch:active::after, .step:active::after, .option:active::after, .string-card:active::after, .ghost:active::after, .btn-secondary:active::after, .tuning-chip:active::after { opacity: .12; }
 .inst-header .icon-circle:first-child { margin-left: 0; }
 
 /* ---------------------------------------------------------------- visor */
@@ -221,7 +229,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 .btn-primary .lead { font-size: 14px; }
 .btn-primary.lg { height: 48px; }
-.btn-primary .fit { display: inline-block; white-space: nowrap; }
 
 .stepper { display: flex; align-items: center; padding: 4px; border-radius: 999px; background: var(--surface-high); flex: none; }
 .step { position: relative; overflow: hidden; width: 36px; height: 36px; border-radius: 50%; color: var(--accent); font-size: 20px; font-weight: 700; display: grid; place-items: center; }
@@ -358,7 +365,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 .ghost { position: relative; overflow: hidden; display: block; margin: 0 auto; padding: 12px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--accent); }
 
-.sp-4 { height: 4px; } .sp-8 { height: 8px; } .sp-12 { height: 12px; } .sp-16 { height: 16px; } .sp-20 { height: 20px; } .sp-24 { height: 24px; }
+.sp-12 { height: 12px; } .sp-20 { height: 20px; } .sp-24 { height: 24px; }
 
 /* ================================================================ simulador */
 .sim {

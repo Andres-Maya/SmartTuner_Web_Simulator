@@ -51,9 +51,9 @@
     cello: ['0 0 63.246 63.246', 'M62.048,1.235c-1.664-1.664-4.441-1.584-6.203,0.179c-0.825,0.825-1.266,1.873-1.347,2.924l-1.694-1.694c-0.391-0.391-1.023-0.391-1.414,0s-0.391,1.023,0,1.414l1.813,1.813c0.136,0.136,0.304,0.207,0.478,0.248l-1.705,1.423c-0.047-0.095-0.099-0.188-0.177-0.267l-1.813-1.813c-0.391-0.391-1.023-0.391-1.414,0c-0.391,0.39-0.391,1.023,0,1.414l1.813,1.813c0.036,0.036,0.082,0.051,0.121,0.08l-11.836,9.878c-9.999-6.647-17.61,3.387-17.61,3.387s-1.238,0.472-2.91,0.664c-1.506,2.297,2.98,2.106,1.787,4.85c-2.55,5.865-8.106,3.629-9.897,2.714c-0.385-0.197-0.826-0.238-1.24-0.115L7.79,30.447c-0.12,0.036-0.193,0.156-0.17,0.278l0.266,1.418c0,0-7.237,1.86-7.811,7.811C-0.41,44.983,1.428,51.62,6.508,56.7s11.717,6.918,16.746,6.433c5.951-0.574,7.811-7.811,7.811-7.811l1.418,0.266c0.123,0.023,0.243-0.05,0.278-0.17l0.299-1.007c0.123-0.414,0.081-0.855-0.115-1.24c-0.914-1.791-3.15-7.348,2.714-9.897c2.744-1.193,2.553,3.293,4.85,1.787c0.191-1.672,0.664-2.91,0.664-2.91s10.034-7.611,3.387-17.61l9.858-11.812c0.003,0.003,0.004,0.008,0.008,0.011l1.813,1.813c0.195,0.195,0.451,0.293,0.707,0.293s0.512-0.098,0.707-0.293c0.391-0.391,0.391-1.023,0-1.414l-1.813-1.813c-0.048-0.048-0.107-0.071-0.161-0.107l1.351-1.619c0.049,0.117,0.119,0.227,0.214,0.323l1.813,1.813c0.195,0.195,0.451,0.293,0.707,0.293s0.512-0.098,0.707-0.293c0.391-0.391,0.391-1.023,0-1.414l-1.532-1.532c1.054-0.08,2.105-0.521,2.931-1.348C63.632,5.676,63.712,2.899,62.048,1.235z M17.854,50.832l-1.723,1.723c-1.324,1.324-3.471,1.324-4.795,0L10.5,51.718c-1.324-1.324-1.324-3.471,0-4.795l1.723-1.723c0.835-0.835,2.188-0.835,3.023,0l2.609,2.609C18.689,48.644,18.689,49.997,17.854,50.832z'],
     ukulele: ['0 0 512 512', 'M502.63 39L473 9.37a32 32 0 0 0-45.26 0L381.46 55.7a35.140 35.14 0 0 0-8.53 13.79L360.77 106l-76.26 76.26c-12.16-8.760-25.5-15.74-40.1-19.14-33.45-7.78-67-.88-89.88 22a82.45 82.45 0 0 0-20.24 33.47c-6 18.56-23.21 32.69-42.15 34.46-23.7 2.270-45.730 11.45-62.61 28.44C-16.11 327-7.9 409 47.58 464.45S185 528 230.56 482.52c17-16.88 26.16-38.9 28.45-62.71 1.76-18.85 15.89-36.130 34.43-42.14a82.6 82.6 0 0 0 33.48-20.25c22.87-22.88 29.74-56.36 22-89.75-3.39-14.64-10.37-28-19.16-40.2L406 151.23l36.48-12.16a35.14 35.14 0 0 0 13.79-8.53l46.33-46.32a32 32 0 0 0 .03-45.22zM208 352a48 48 0 1 1 48-48 48 48 0 0 1-48 48z'],
   };
-  const lineIcon = (key) => {
+  const lineIcon = (key, cls = 'o-icon') => {
     const [viewBox, d] = LINE_ICONS[key];
-    return `<svg class="o-icon" viewBox="${viewBox}" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>`;
+    return `<svg class="${cls}" viewBox="${viewBox}" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>`;
   };
 
   // ================================================================= color (Palette.kt, Tokens.kt)
@@ -179,10 +179,8 @@
   const SHIFT_LABEL = { 2: '15ma', 1: '8va', '-1': '8vb', '-2': '15mb' };
 
   const formatHz = (hz) => `${hz.toFixed(1)} Hz`;
-  const formatCents = (c) => {
-    const r = Math.round(c);
-    return `${r < 0 || Object.is(r, -0) || (r === 0 && c < 0) ? '-' : '+'}${Math.abs(r)} ¢`;
-  };
+  // Como el "%+.0f" de la app: el signo sale de la desviación, no del número ya redondeado.
+  const formatCents = (c) => `${c < 0 ? '-' : '+'}${Math.abs(Math.round(c))} ¢`;
   const stringLabels = (tuning, style) => [...tuning.strings].sort((a, b) => a.midi - b.midi).map((s) => noteName(s.midi, style).label).join(' ');
 
   // ================================================================= estado
@@ -200,6 +198,8 @@
     sheet: null,
     pick: { inst: 'GUITAR', tuning: 0 },
     reading: null,
+    instrumentReading: null,
+    transitionUntil: 0,
   };
   const sim = { on: true, midi: 45, cents: 12, autoTune: null };
 
@@ -1005,6 +1005,8 @@
     outgoing.style.pointerEvents = 'none';
     outgoing.setAttribute('aria-hidden', 'true');
     $('#simStringsBlock').hidden = !toInstrument;
+    // Mientras dura el deslizamiento se ven las dos pantallas, así que hay que dibujar ambas.
+    S.transitionUntil = performance.now() + 360;
     tick();
   }
 
@@ -1056,7 +1058,7 @@
    */
   const instrumentGlyph = (icon) => (isDark()
     ? `<img src="${neonSrc(icon)}" alt="">`
-    : lineIcon(icon).replace('class="o-icon"', ''));
+    : lineIcon(icon, ''));
 
   function tuningOptionsHTML(inst, selectedIndex) {
     return `<div class="options" role="radiogroup">${inst.tunings.map((t, i) => `
@@ -1427,9 +1429,9 @@
       last = now;
       stepAutoTune(now);
       const scan = ((now - t0) % 3200) / 3200;
-      // Las dos pantallas se dibujan siempre: durante la transición se ven a la vez.
-      renderChromatic(dt, scan);
-      if (S.instrument) renderInstrument(dt, scan);
+      const both = now < S.transitionUntil;
+      if (both || S.mode === 'chromatic') renderChromatic(dt, scan);
+      if (S.instrument && (both || S.mode === 'instrument')) renderInstrument(dt, scan);
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);
