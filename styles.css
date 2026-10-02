@@ -157,21 +157,24 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   background: var(--surface-high); color: var(--text);
   position: relative; overflow: hidden;
 }
-.icon-circle::after, .touch::after, .step::after, .option::after, .string-card::after, .ghost::after, .btn-secondary::after, .tuning-chip::after {
+.icon-circle::after, .touch::after, .option::after, .string-card::after, .btn-secondary::after, .tuning-chip::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit;
   background: currentColor; opacity: 0; transition: opacity 150ms; pointer-events: none;
 }
-.icon-circle:active::after, .touch:active::after, .step:active::after, .option:active::after, .string-card:active::after, .ghost:active::after, .btn-secondary:active::after, .tuning-chip:active::after { opacity: .12; }
+.icon-circle:active::after, .touch:active::after, .option:active::after, .string-card:active::after, .btn-secondary:active::after, .tuning-chip:active::after { opacity: .12; }
 .inst-header .icon-circle:first-child { margin-left: 0; }
 
 /* ---------------------------------------------------------------- visor */
 .visor { width: 100%; }
 .dial { position: relative; width: 100%; aspect-ratio: 1.45; }
 
-/* PaperDial: el visor del modo claro — la nota escrita en un aro y una regleta recta. */
-.paper-dial { width: 100%; display: flex; flex-direction: column; align-items: center; }
+/* PaperDial: el visor del modo claro — la regleta curvada sobre el trazado del arco y,
+   en su hueco, la nota escrita dentro de un aro. */
+.paper-dial { position: relative; width: 100%; aspect-ratio: 1.45; }
+.paper-arc { position: absolute; inset: 0; width: 100%; height: 100%; }
+.paper-note { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; }
 .note-ring {
-  width: 168px; height: 168px; border-radius: 50%;
+  width: 136px; height: 136px; border-radius: 50%;
   border: 1.5px solid color-mix(in srgb, var(--text) 45%, transparent);
   display: flex; align-items: center; justify-content: center;
 }
@@ -181,7 +184,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .note-glyph .ng-side span { font-size: 30px; line-height: 34px; min-height: 34px; }
 .note-ring .ng-empty { font-family: "Abril Fatface", Georgia, serif; font-size: 86px; line-height: 90px; color: var(--muted); }
 .paper-dial .note-caption { margin-top: 8px; }
-.ruler { width: 100%; height: 96px; display: block; margin-top: 20px; }
 .dial canvas.arc { position: absolute; inset: 0; width: 100%; height: 100%; }
 .dial-row { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; }
 .neighbor { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
@@ -211,28 +213,16 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .status-text.pulsing { animation: pulse 800ms ease-in-out infinite alternate; }
 @keyframes pulse { from { opacity: .45; } to { opacity: 1; } }
 
-/* NoteStrip y pentagrama */
-.note-strip { width: 100%; height: 64px; border-radius: 20px; display: block; background: var(--surface); }
-.card { width: 100%; border-radius: 24px; background: var(--surface); padding: 12px 16px; }
-.staff-head { display: flex; align-items: center; justify-content: space-between; }
-.clef-name { font-size: 12px; line-height: 17px; color: var(--muted); }
-.staff { width: 100%; height: 120px; display: block; }
-
-/* ---------------------------------------------------------------- barra inferior */
-.bottom-bar { width: 100%; display: flex; align-items: center; gap: 12px; }
+/* ---------------------------------------------------------------- acción principal */
 .btn-primary {
   position: relative; overflow: hidden;
-  flex: 1 1 0; min-width: 0; height: 44px; padding: 0 16px; border-radius: 999px;
+  width: 100%; height: 44px; padding: 0 16px; border-radius: 999px;
   display: flex; align-items: center; justify-content: center; gap: 8px;
   background: linear-gradient(90deg, var(--accent), var(--accent-alt));
   color: var(--on-accent); font-size: 16px; font-weight: 600; white-space: nowrap;
 }
 .btn-primary .lead { font-size: 14px; }
-.btn-primary.lg { height: 48px; }
-
-.stepper { display: flex; align-items: center; padding: 4px; border-radius: 999px; background: var(--surface-high); flex: none; }
-.step { position: relative; overflow: hidden; width: 36px; height: 36px; border-radius: 50%; color: var(--accent); font-size: 20px; font-weight: 700; display: grid; place-items: center; }
-.step-label { padding: 0 8px; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.btn-primary.lg { height: 52px; }
 
 /* ---------------------------------------------------------------- cabecera de instrumento */
 .inst-header { width: 100%; display: flex; align-items: center; }
@@ -243,16 +233,18 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .avatar { width: 56px; height: 56px; margin-left: 8px; }
 .inst-titles { flex: 1; min-width: 0; margin-left: 8px; }
 .inst-name { font-size: 22px; font-weight: 700; line-height: 28px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.inst-meta { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+/* Selector de variante: las alternativas a la vista, no escondidas en un menú. */
+.tuning-selector { width: 100%; margin-top: 12px; }
+.tuning-chips { display: flex; gap: 8px; margin-top: 8px; overflow-x: auto; scrollbar-width: none; }
+.tuning-chips::-webkit-scrollbar { display: none; }
 .tuning-chip {
-  position: relative; overflow: hidden;
-  display: inline-flex; align-items: center; gap: 2px;
-  padding: 2px 8px; border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  color: var(--accent); font-size: 12px; line-height: 17px;
-  max-width: 150px;
+  position: relative; overflow: hidden; flex: none;
+  padding: 8px 16px; border-radius: 999px;
+  background: var(--surface-high); color: var(--muted);
+  font-size: 14px; font-weight: 600; white-space: nowrap;
+  transition: background-color 200ms, color 200ms;
 }
-.tuning-chip span:first-child { overflow: hidden; text-overflow: ellipsis; }
+.tuning-chip[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
 .ref-note { font-size: 12px; line-height: 17px; color: var(--muted); }
 
 /* ---------------------------------------------------------------- tarjetas de cuerda */
@@ -321,8 +313,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .sheet-body { overflow-y: auto; padding: 0 24px 40px; scrollbar-width: none; overscroll-behavior: contain; }
 .sheet-body::-webkit-scrollbar { display: none; }
 
-.sheet-title { font-size: 22px; font-weight: 700; line-height: 28px; text-align: center; }
-.sheet-text { font-size: 14px; line-height: 20px; color: var(--muted); text-align: center; margin-top: 8px; }
 .section-label { font-size: 11px; font-weight: 600; letter-spacing: 1px; line-height: 16px; color: var(--muted); }
 .hint { font-size: 12px; line-height: 17px; color: var(--muted); margin-top: 2px; }
 .caption { font-size: 13px; line-height: 18px; color: var(--muted); text-align: center; }
@@ -363,7 +353,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
   color: var(--accent); font-size: 16px; font-weight: 600; white-space: nowrap;
 }
-.ghost { position: relative; overflow: hidden; display: block; margin: 0 auto; padding: 12px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--accent); }
 
 .sp-12 { height: 12px; } .sp-20 { height: 20px; } .sp-24 { height: 24px; }
 

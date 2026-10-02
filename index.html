@@ -70,25 +70,8 @@
               <div class="status-text" data-status="chromatic"></div>
               <div class="weight"></div>
 
-              <canvas class="note-strip" id="noteStrip"></canvas>
-              <div class="gap-md" id="stripGap"></div>
-              <div class="card staff-card">
-                <div class="staff-head">
-                  <span class="overline">PENTAGRAMA</span>
-                  <span class="clef-name" id="clefName">Clave de Sol</span>
-                </div>
-                <canvas class="staff" id="staff"></canvas>
-              </div>
-              <div class="weight"></div>
-
-              <div class="bottom-bar">
-                <button class="btn-primary touch" id="identifyBtn"><span class="lead">✦</span><span>Identificar instrumento</span></button>
-                <div class="stepper">
-                  <button class="step" data-ref="-1" aria-label="Bajar frecuencia de referencia">−</button>
-                  <span class="step-label" data-ref-label>La 440</span>
-                  <button class="step" data-ref="1" aria-label="Subir frecuencia de referencia">+</button>
-                </div>
-              </div>
+              <!-- Única acción de la pantalla: ancha y abajo, donde cae el pulgar. -->
+              <button class="btn-primary lg touch" id="identifyBtn"><span class="lead">✦</span><span>Identificar instrumento</span></button>
             </div>
           </section>
 
@@ -102,12 +85,15 @@
                 <button class="neon spin avatar" id="instAvatar" aria-label=""></button>
                 <div class="inst-titles">
                   <div class="inst-name" id="instName">Guitarra</div>
-                  <div class="inst-meta">
-                    <button class="tuning-chip" id="tuningChip" aria-label="Cambiar el tipo de instrumento"><span id="tuningChipName">6 cuerdas</span><span>▾</span></button>
-                    <span class="ref-note" data-ref-label>La 440</span>
-                  </div>
+                  <span class="ref-note" data-ref-label>La 440</span>
                 </div>
                 <button class="icon-circle" data-toggle-theme aria-label="Cambiar al modo claro"><svg class="mode-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"></svg></button>
+              </div>
+
+              <!-- Las variantes a la vista: cambiar de 5 cuerdas a 4 es un toque, sin menús. -->
+              <div class="tuning-selector" id="tuningSelector" hidden>
+                <span class="overline">TIPO</span>
+                <div class="tuning-chips" role="radiogroup" aria-label="Tipo de instrumento" id="tuningChips"></div>
               </div>
 
               <div class="weight"></div>
@@ -207,7 +193,6 @@
       <ul>
         <li><b>Visor:</b> el arco de luces y los siete segmentos dejan paso al <b>PaperDial</b>: la nota escrita en Abril Fatface dentro de un aro sin relleno (168 dp) y una regleta recta de ±50 ¢ con una aguja que crece al dar en la nota.</li>
         <li><b>Hercios:</b> viajan bajo la aguja, así que la columna FRECUENCIA desaparece de las lecturas.</li>
-        <li><b>Carrusel cromático:</b> se retira; ese papel ya lo hace la regleta.</li>
         <li><b>Brillos:</b> el token <code>glow</code> pasa de 1 a 0 y apaga halos, auras y el núcleo blanco de las luces.</li>
         <li><b>Cuerdas:</b> sin recuadro ni fondo; el estado lo dice el color de la nota, y la onda al afinar es circular en vez de rectangular.</li>
         <li><b>Iconos y logo:</b> el neón se cambia por el mismo dibujo a trazo, teñido con el acento.</li>
@@ -219,7 +204,8 @@
         <li><b>Significado del color:</b> afinado / cerca / lejos siguen siendo verde, ámbar y coral, pero en claro bajan de tono (<code>#1F7043</code>, <code>#8E6110</code>, <code>#B23A32</code>) para pasar de 4.5:1 de contraste sobre el papel.</li>
         <li><b>Umbrales:</b> ±5 ¢ afinado, degradado hasta 20 ¢ y de ahí a 50 ¢, idénticos en ambos modos.</li>
         <li><b>Espaciado, formas y tamaños:</b> los mismos tokens; solo cambian colores y qué se dibuja.</li>
-        <li><b>Navegación:</b> dos pantallas y tres hojas; el botón de sol/luna ocupa el sitio del antiguo selector de color, que ya no existe.</li>
+        <li><b>Una pantalla, una acción:</b> en ambos modos el afinador muestra visor, lecturas y estado, y nada más; abajo va <b>Identificar instrumento</b>, a lo ancho.</li>
+        <li><b>Tipo de instrumento:</b> las variantes (4, 5 o 6 cuerdas…) van como fichas bajo la cabecera, visibles sin abrir ningún menú.</li>
         <li><b>Arranque:</b> la app sigue al modo del sistema hasta que alguien toca el botón; a partir de ahí manda esa elección.</li>
       </ul>
     </article>

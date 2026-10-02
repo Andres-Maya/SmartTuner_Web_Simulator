@@ -158,25 +158,10 @@
       midi, letter, acc, octave,
       label: `${letter}${acc}${octave}`,
       solfegeLabel: `${SOLFEGE[li]}${acc} ${octave}`,
-      diatonic: octave * 7 + li,
     };
   }
   const midiToFreq = (midi, a4) => a4 * 2 ** ((midi - 69) / 12);
   const freqToMidi = (f, a4) => 69 + 12 * Math.log2(f / a4);
-
-  function staffPosition(note) {
-    const clef = note.midi >= 60 ? 'TREBLE' : 'BASS';
-    const shift = note.midi >= 96 ? 2 : note.midi >= 84 ? 1 : note.midi < 24 ? -2 : note.midi < 36 ? -1 : 0;
-    const bottom = clef === 'TREBLE' ? 4 * 7 + 2 : 2 * 7 + 4;
-    return { clef, shift, step: note.diatonic - shift * 7 - bottom };
-  }
-  function ledgerSteps(step) {
-    const out = [];
-    if (step <= -2) for (let s = -2; s >= step; s -= 2) out.push(s);
-    if (step >= 10) for (let s = 10; s <= step; s += 2) out.push(s);
-    return out;
-  }
-  const SHIFT_LABEL = { 2: '15ma', 1: '8va', '-1': '8vb', '-2': '15mb' };
 
   const formatHz = (hz) => `${hz.toFixed(1)} Hz`;
   // Como el "%+.0f" de la app: el signo sale de la desviación, no del número ya redondeado.
@@ -267,17 +252,39 @@
 
   // ---------------------------------------------------------------- LedTuningArc
   const SIDE_LIGHTS = 10, HALF_SWEEP = 62, LIGHT_LENGTH = 0.19, MAX_CENTS = 50;
+
+  /**
+   * Trazado del arco del afinador. Los dos modos lo comparten: el oscuro enciende sus luces
+   * sobre él y el claro dibuja ahí la regleta, así el visor no se mueve al cambiar de modo.
+   */
+  function arcGeometry(W, H, pad = 6) {
+    const sweep = HALF_SWEEP * Math.PI / 180;
+    const radius = Math.min(
+      (W / 2 - pad) / Math.sin(sweep),
+      (H - pad * 2) / (1 - Math.cos(sweep) + LIGHT_LENGTH * Math.cos(sweep)),
+    );
+    const cx = W / 2, cy = pad + radius;
+    return {
+      radius,
+      length: radius * LIGHT_LENGTH,
+      /** Grados desde la vertical: −62 en −50 ¢ y +62 en +50 ¢. */
+      angleOf: (cents) => -90 + clamp(cents / MAX_CENTS, -1, 1) * HALF_SWEEP,
+      positionOf: (angle, distance) => {
+        const r = angle * Math.PI / 180;
+        return [cx + distance * Math.cos(r), cy + distance * Math.sin(r)];
+      },
+    };
+  }
+
   function drawArc(canvas, o) {
     const [ctx, W, H] = prepare(canvas);
     const c = S.colors;
-    const sweep = HALF_SWEEP * Math.PI / 180;
-    const pad = 6;
-    const radius = Math.min((W / 2 - pad) / Math.sin(sweep), (H - pad * 2) / (1 - Math.cos(sweep) + LIGHT_LENGTH * Math.cos(sweep)));
-    const length = radius * LIGHT_LENGTH;
-    const cx = W / 2, cy = pad + radius;
-    const step = radius * sweep / SIDE_LIGHTS;
-    const angleOf = (i) => -90 + i / SIDE_LIGHTS * HALF_SWEEP;
-    const pos = (i, d) => { const r = angleOf(i) * Math.PI / 180; return [cx + d * Math.cos(r), cy + d * Math.sin(r)]; };
+    const arc = arcGeometry(W, H);
+    const radius = arc.radius;
+    const length = arc.length;
+    const step = radius * HALF_SWEEP * Math.PI / 180 / SIDE_LIGHTS;
+    const angleOf = (i) => arc.angleOf(i / SIDE_LIGHTS * MAX_CENTS);
+    const pos = (i, d) => arc.positionOf(angleOf(i), d);
 
     if (o.inTune && o.hasSignal) {
       const [ax, ay] = pos(0, radius - length / 2);
@@ -410,128 +417,6 @@
     ctx.stroke(path);
   }
 
-  // ---------------------------------------------------------------- NoteStrip
-  function drawStrip(canvas, o) {
-    const [ctx, W, H] = prepare(canvas);
-    const c = S.colors;
-    ctx.fillStyle = css(c.surface);
-    ctx.fillRect(0, 0, W, H);
-    const spacing = W / 5, cx = W / 2, cy = H / 2;
-    const first = Math.floor(o.position - 2.5 - 1), last = Math.ceil(o.position + 2.5 + 1);
-
-    ctx.strokeStyle = css(c.tick);
-    ctx.lineWidth = 1.5;
-    for (let m = first; m <= last; m++) {
-      for (let q = 0; q < 4; q++) {
-        const x = cx + (m + q / 4 - o.position) * spacing;
-        const th = q === 0 ? 8 : 4;
-        ctx.beginPath(); ctx.moveTo(x, H - 6 - th); ctx.lineTo(x, H - 6); ctx.stroke();
-      }
-    }
-
-    ctx.font = '700 22px Roboto, system-ui, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    for (let m = first; m <= last; m++) {
-      const x = cx + (m - o.position) * spacing;
-      const emphasis = clamp(1 - Math.abs(m - o.position) / 2.5, 0, 1);
-      const base = o.active && m === o.nearest ? lerpColor(c.textPrimary, o.color, emphasis) : c.textPrimary;
-      const s = 0.6 + 0.4 * emphasis;
-      ctx.save();
-      ctx.translate(x, cy - 4);
-      ctx.scale(s, s);
-      ctx.fillStyle = css(alpha(base, (0.2 + 0.8 * emphasis) * (o.active ? 1 : 0.55)));
-      ctx.fillText(noteName(m, S.accidental).label, 0, 1);
-      ctx.restore();
-    }
-
-    const fade = spacing * 0.9;
-    let g = ctx.createLinearGradient(0, 0, fade, 0);
-    g.addColorStop(0, css(c.surface)); g.addColorStop(1, css(alpha(c.surface, 0)));
-    ctx.fillStyle = g; ctx.fillRect(0, 0, fade, H);
-    g = ctx.createLinearGradient(W - fade, 0, W, 0);
-    g.addColorStop(0, css(alpha(c.surface, 0))); g.addColorStop(1, css(c.surface));
-    ctx.fillStyle = g; ctx.fillRect(W - fade, 0, fade, H);
-
-    const half = 6;
-    ctx.fillStyle = css(o.active ? o.color : c.tick);
-    ctx.beginPath(); ctx.moveTo(cx - half, 0); ctx.lineTo(cx + half, 0); ctx.lineTo(cx, half * 1.3); ctx.closePath(); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(cx - half, H); ctx.lineTo(cx + half, H); ctx.lineTo(cx, H - half * 1.3); ctx.closePath(); ctx.fill();
-  }
-
-  // ---------------------------------------------------------------- StaffNotation
-  function drawStaff(canvas, o) {
-    const [ctx, W, H] = prepare(canvas);
-    const c = S.colors;
-    const hs = H / 18, mid = H / 2;
-    const yOf = (step) => mid + (4 - step) * hs;
-    const startX = 2, endX = W - 2;
-
-    ctx.strokeStyle = css(c.staffLine);
-    ctx.lineWidth = 1.2;
-    for (let line = 0; line <= 4; line++) {
-      const y = yOf(line * 2);
-      ctx.beginPath(); ctx.moveTo(startX, y); ctx.lineTo(endX, y); ctx.stroke();
-    }
-    ctx.beginPath(); ctx.moveTo(startX, yOf(0)); ctx.lineTo(startX, yOf(8)); ctx.stroke();
-    ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(endX, yOf(0)); ctx.lineTo(endX, yOf(8)); ctx.stroke();
-
-    const treble = o.clef !== 'BASS';
-    ctx.font = `${hs * (treble ? 8 : 6)}px "Noto Music", serif`;
-    ctx.textAlign = 'left';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = css(alpha(c.textPrimary, 0.85));
-    ctx.fillText(treble ? '\u{1D11E}' : '\u{1D122}', 8, treble ? yOf(3.2) : yOf(5));
-
-    if (!o.pos) return;
-    const headX = W * 0.55;
-    const y = yOf(o.step);
-    const shown = Math.round(o.step);
-
-    ctx.strokeStyle = css(alpha(c.textPrimary, 0.6));
-    ctx.lineWidth = 1.5;
-    for (const s of ledgerSteps(shown)) {
-      ctx.beginPath(); ctx.moveTo(headX - 2.3 * hs, yOf(s)); ctx.lineTo(headX + 2.3 * hs, yOf(s)); ctx.stroke();
-    }
-
-    ctx.save();
-    ctx.translate(headX, y);
-    ctx.rotate(-20 * Math.PI / 180);
-    ctx.beginPath(); ctx.ellipse(0, 0, 1.4 * hs, hs, 0, 0, Math.PI * 2);
-    ctx.fillStyle = css(o.color); ctx.fill();
-    ctx.restore();
-
-    ctx.strokeStyle = css(o.color);
-    ctx.lineWidth = 1.6;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    if (shown < 4) { const x = headX + 1.25 * hs; ctx.moveTo(x, y - 0.3 * hs); ctx.lineTo(x, y - 7 * hs); }
-    else { const x = headX - 1.25 * hs; ctx.moveTo(x, y + 0.3 * hs); ctx.lineTo(x, y + 7 * hs); }
-    ctx.stroke();
-    ctx.lineCap = 'butt';
-
-    ctx.fillStyle = css(o.color);
-    if (o.acc) {
-      ctx.font = `${hs * 4.5}px Roboto, system-ui, sans-serif`;
-      ctx.textAlign = 'right';
-      ctx.fillText(o.acc, headX - 2.4 * hs, y);
-    }
-    const shiftLabel = SHIFT_LABEL[o.pos.shift];
-    if (shiftLabel) {
-      ctx.font = 'italic 600 12px Roboto, system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      ctx.fillStyle = css(c.textMuted);
-      ctx.fillText(shiftLabel, headX, o.pos.shift > 0 ? yOf(12) - 17 : yOf(-4));
-      ctx.textBaseline = 'middle';
-      ctx.fillStyle = css(o.color);
-    }
-    ctx.font = '600 16px Roboto, system-ui, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(o.label, headX + 3.5 * hs, y);
-  }
-
   // ================================================================= DOM: visor (TunerDial)
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
@@ -559,15 +444,17 @@
       </div>
       </div>
       <div class="paper-dial" hidden>
-        <div class="note-ring">
-          <div class="note-glyph" hidden>
-            <span class="ng-letter">A</span>
-            <span class="ng-side"><span class="ng-acc"></span><span class="ng-oct"></span></span>
+        <canvas class="paper-arc"></canvas>
+        <div class="paper-note">
+          <div class="note-ring">
+            <div class="note-glyph" hidden>
+              <span class="ng-letter">A</span>
+              <span class="ng-side"><span class="ng-acc"></span><span class="ng-oct"></span></span>
+            </div>
+            <span class="ng-empty">–</span>
           </div>
-          <span class="ng-empty">–</span>
+          <div class="note-caption"></div>
         </div>
-        <div class="note-caption"></div>
-        <canvas class="ruler"></canvas>
       </div>`;
     const notes = $$('.n-note', host);
     return {
@@ -576,7 +463,7 @@
       halo: $('.halo', host), caption: $('.dial .note-caption', host), low: notes[0], high: notes[1],
       ring: $('.note-glyph', host), empty: $('.ng-empty', host), ngLetter: $('.ng-letter', host),
       ngAcc: $('.ng-acc', host), ngOct: $('.ng-oct', host),
-      paperCaption: $('.paper-dial .note-caption', host), ruler: $('.ruler', host),
+      paperCaption: $('.paper-dial .note-caption', host), paperArc: $('.paper-arc', host),
       cents: new Spring(0.7, 200), color: null, glow: 0.2, halo_: 0.07,
       grow: new Spring(0.5, 1500, 0),
     };
@@ -584,51 +471,41 @@
   function createStats(host) {
     host.innerHTML = ['FRECUENCIA', 'DESVIACIÓN', 'OBJETIVO']
       .map((l) => `<div class="stat"><span class="s-label">${l}</span><span class="s-value">—</span></div>`).join('');
-    return { values: $$('.s-value', host), items: $$('.stat', host) };
+    return { values: $$('.s-value', host) };
   }
 
-  /** Regleta recta del modo claro (PitchRuler en PaperDial.kt). */
-  function drawRuler(canvas, o) {
+  /**
+   * Regleta curvada del modo claro (PitchArc en PaperDial.kt): las mismas rayas de una
+   * regleta, pero sobre el trazado del arco, para que el visor no se mueva al cambiar de modo.
+   */
+  function drawPaperArc(canvas, o) {
     const [ctx, W, H] = prepare(canvas);
     const c = S.colors;
-    const marksBottom = H * 0.52;
-    const middle = marksBottom / 2;
-    const centerX = W / 2;
-    const usable = W - 8;
+    const arc = arcGeometry(W, H);
 
     ctx.lineCap = 'round';
-    for (let tick = -50; tick <= 50.01; tick += 2.5) {
-      const x = centerX + tick / 50 * usable / 2;
-      const quarter = Number.isInteger(tick) && tick % 25 === 0;
-      const half = tick === 0 ? marksBottom / 2 : marksBottom * (quarter ? 0.34 : 0.20);
-      ctx.strokeStyle = css(tick === 0 ? alpha(c.textPrimary, 0.55) : c.tick);
-      ctx.lineWidth = tick === 0 ? 1.6 : 1;
+    // Cada raya apunta al centro del arco: va del borde de fuera hacia dentro.
+    const tick = (at, length, color, width) => {
+      const angle = arc.angleOf(at);
+      const [x1, y1] = arc.positionOf(angle, arc.radius);
+      const [x2, y2] = arc.positionOf(angle, arc.radius - length);
+      ctx.strokeStyle = css(color);
+      ctx.lineWidth = width;
       ctx.beginPath();
-      ctx.moveTo(x, middle - half);
-      ctx.lineTo(x, middle + half);
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
       ctx.stroke();
+    };
+
+    for (let at = -MAX_CENTS; at <= MAX_CENTS + 0.01; at += 2.5) {
+      const quarter = Number.isInteger(at) && at % 25 === 0;
+      if (at === 0) tick(at, arc.length, alpha(c.textPrimary, 0.55), 1.6);
+      else tick(at, arc.length * (quarter ? 0.68 : 0.40), c.tick, 1);
     }
     if (!o.hasSignal) return;
 
     // Aguja: lo que entra por el micrófono. Crece al caer sobre la nota.
-    const needleX = centerX + clamp(o.cents / 50, -1, 1) * usable / 2;
-    const needleHalf = marksBottom * (0.62 + 0.30 * o.grow);
-    ctx.strokeStyle = css(c.textPrimary);
-    ctx.lineWidth = 2.4 + 1.4 * o.grow;
-    ctx.beginPath();
-    ctx.moveTo(needleX, middle - needleHalf);
-    ctx.lineTo(needleX, middle + needleHalf);
-    ctx.stroke();
-
-    if (o.frequency > 0) {
-      const text = formatHz(o.frequency);
-      ctx.font = '500 12px Roboto, system-ui, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      ctx.fillStyle = css(c.textPrimary);
-      const w = ctx.measureText(text).width;
-      ctx.fillText(text, clamp(needleX - w / 2, 0, W - w), middle + needleHalf + 8);
-    }
+    tick(o.cents, arc.length * (1.24 + 0.6 * o.grow), c.textPrimary, 2.4 + 1.4 * o.grow);
   }
 
   function renderDial(dial, v, dt, scan) {
@@ -681,12 +558,7 @@
     setText(dial.paperCaption, note ? note.solfegeLabel : v.emptyLabel);
     dial.grow.target = v.inTune && v.hasSignal ? 1 : 0;
     dial.grow.step(dt);
-    drawRuler(dial.ruler, {
-      cents: dial.cents.x,
-      frequency: v.frequency || 0,
-      hasSignal: v.hasSignal,
-      grow: dial.grow.x,
-    });
+    drawPaperArc(dial.paperArc, { cents: dial.cents.x, hasSignal: v.hasSignal, grow: dial.grow.x });
   }
 
   function renderStatus(el, text, color, idle, pulsing) {
@@ -771,17 +643,12 @@
     };
   }
 
-  const strip = { pos: new Spring(0.8, 200, 45), color: null };
-  const staff = { step: new Spring(0.75, 400, 4) };
-
   function renderChromatic(dt, scan) {
     const v = viewChromatic();
     const r = S.reading;
     renderDial(dials.chromatic, v, dt, scan);
     const color = dials.chromatic.color;
 
-    // En claro los hercios ya van bajo la aguja: repetirlos sobra.
-    stats.chromatic.items[0].hidden = !isDark();
     setText(stats.chromatic.values[0], v.hasSignal ? formatHz(r.freq) : '— Hz');
     setText(stats.chromatic.values[1], v.hasSignal ? formatCents(r.cents) : '— ¢');
     setText(stats.chromatic.values[2], v.hasSignal ? formatHz(midiToFreq(r.nearest, S.a4)) : '— Hz');
@@ -789,23 +656,6 @@
     let text = 'Esperando sonido…';
     if (v.hasSignal) text = v.inTune ? '¡Afinado!' : v.cents < 0 ? 'Grave · sube la afinación' : 'Agudo · baja la afinación';
     renderStatus(el.statusChromatic, text, color, !v.hasSignal, !v.hasSignal);
-
-    // El carrusel cromático se queda en el modo oscuro: en el claro ese papel lo hace la regleta.
-    el.strip.hidden = !isDark();
-    el.stripGap.hidden = !isDark();
-    if (v.hasSignal) strip.pos.target = r.nearest + r.cents / 100;
-    strip.pos.step(dt);
-    if (isDark()) drawStrip(el.strip, { position: strip.pos.x, nearest: v.hasSignal ? r.nearest : null, active: v.hasSignal, color });
-
-    const pos = v.note ? staffPosition(v.note) : null;
-    staff.step.target = pos ? pos.step : 4;
-    staff.step.step(dt);
-    setText(el.clefName, pos && pos.clef === 'BASS' ? 'Clave de Fa' : 'Clave de Sol');
-    drawStaff(el.staff, {
-      pos, clef: pos ? pos.clef : 'TREBLE', step: staff.step.x,
-      acc: v.note ? v.note.acc : '', label: v.note ? v.note.label : null,
-      color: v.hasSignal ? color : S.colors.textMuted,
-    });
   }
 
   // ---------------------------------------------------------------- afinación por instrumento
@@ -815,9 +665,9 @@
     const inst = S.instrument;
     const tuning = currentTuning();
     setText(el.instName, inst.name);
-    setText(el.tuningChipName, tuning.name);
     el.instAvatar.setAttribute('aria-label', inst.name);
     el.instAvatar.innerHTML = instrumentGlyph(inst.icon);
+    renderTuningSelector();
 
     el.strings.innerHTML = orderedStrings().map((s) => `
       <div class="sc-wrap" data-n="${s.number}">
@@ -844,6 +694,18 @@
     renderSimStrings();
   }
 
+  /**
+   * Variantes del instrumento como fichas: la que está en uso va marcada y las demás se ven
+   * al lado, que es lo que cuenta que se pueden cambiar.
+   */
+  function renderTuningSelector() {
+    const tunings = S.instrument.tunings;
+    el.tuningSelector.hidden = tunings.length < 2;
+    if (el.tuningSelector.hidden) return;
+    el.tuningChips.innerHTML = tunings.map((t, i) => `
+      <button class="tuning-chip" role="radio" aria-checked="${i === S.tuningIndex}" data-tuning="${i}">${t.name}</button>`).join('');
+  }
+
   function onStringTuned(number) {
     const card = stringCards.find((c) => c.n === number);
     if (!card) return;
@@ -859,7 +721,6 @@
     const color = dials.instrument.color;
     const r = S.instrumentReading;
 
-    stats.instrument.items[0].hidden = !isDark();
     setText(stats.instrument.values[0], v.active ? formatHz(r.freq) : '— Hz');
     setText(stats.instrument.values[1], v.active ? formatCents(v.cents) : '— ¢');
     const targetString = v.match ? v.match.string : currentTuning().strings.find((s) => s.number === S.selectedString);
@@ -933,12 +794,6 @@
     renderSimNote();
   }
 
-  function changeReference(delta) {
-    S.a4 = clamp(S.a4 + delta, 415, 466);
-    $$('[data-ref-label]').forEach((l) => setText(l, `La ${S.a4}`));
-    fitPrimaryButton();
-  }
-
   function acceptPick() {
     const inst = instrumentById(S.pick.inst);
     closeSheet();
@@ -969,7 +824,8 @@
     S.selectedString = null;
     stopTone();
     buildInstrumentScreen();
-    setText(el.tuningChipName, currentTuning().name);
+    const lowest = currentTuning().strings.reduce((a, b) => (a.midi < b.midi ? a : b));
+    setSim(lowest.midi, randomOffset());
   }
 
   function selectString(number) {
@@ -1112,31 +968,16 @@
     return `Al aceptar verás la afinación de ${label}.`;
   }
 
-  function tuningSheetHTML() {
-    return `
-      <div class="sheet-title">Tipo de ${S.instrument.name}</div>
-      <div class="sheet-text">Elige cuántas cuerdas tiene o en qué afinación está.</div>
-      <div class="sp-20"></div>
-      ${tuningOptionsHTML(S.instrument, S.tuningIndex)}
-      <div class="sp-12"></div>
-      <button class="ghost" data-act="close">Listo</button>`;
-  }
-
-  function openSheet(kind) {
-    S.sheet = kind;
-    if (kind === 'identify') {
-      S.pick = S.instrument
-        ? { inst: S.instrument.id, tuning: S.tuningIndex }
-        : { inst: 'GUITAR', tuning: 0 };
-      el.sheetBody.innerHTML = identifyHTML();
-    } else {
-      el.sheetBody.innerHTML = tuningSheetHTML();
-    }
+  function openSheet() {
+    S.sheet = 'identify';
+    S.pick = S.instrument
+      ? { inst: S.instrument.id, tuning: S.tuningIndex }
+      : { inst: 'GUITAR', tuning: 0 };
+    el.sheetBody.innerHTML = identifyHTML();
     el.sheetBody.scrollTop = 0;
     el.sheet.style.transform = '';
     el.scrim.classList.add('open');
     el.sheet.classList.add('open');
-    el.sheet.setAttribute('aria-label', kind === 'identify' ? 'Identificar instrumento' : 'Tipo de instrumento');
     fitPrimaryButton();
   }
   function closeSheet() {
@@ -1171,14 +1012,9 @@
     }
 
     if (target.dataset.tuning != null) {
-      const index = Number(target.dataset.tuning);
       target.parentElement.querySelectorAll('.option').forEach((o) => o.setAttribute('aria-checked', String(o === target)));
-      if (S.sheet === 'identify') {
-        S.pick.tuning = index;
-        setText($('#pickHint'), pickHint());
-      } else {
-        setTuning(index);
-      }
+      S.pick.tuning = Number(target.dataset.tuning);
+      setText($('#pickHint'), pickHint());
     }
   }
 
@@ -1376,8 +1212,8 @@
       phone: $('#phone'), phoneSlot: $('#phoneSlot'), clock: $('#clock'),
       chromaticScreen: $('#chromaticScreen'), instrumentScreen: $('#instrumentScreen'),
       statusChromatic: $('[data-status="chromatic"]'), statusInstrument: $('[data-status="instrument"]'),
-      strip: $('#noteStrip'), stripGap: $('#stripGap'), staff: $('#staff'), clefName: $('#clefName'),
-      instName: $('#instName'), instAvatar: $('#instAvatar'), tuningChipName: $('#tuningChipName'),
+      instName: $('#instName'), instAvatar: $('#instAvatar'),
+      tuningSelector: $('#tuningSelector'), tuningChips: $('#tuningChips'),
       strings: $('#strings'), footerHint: $('#footerHint'),
       scrim: $('#scrim'), sheet: $('#sheet'), sheetBody: $('#sheetBody'), dragZone: $('#dragZone'),
     });
@@ -1390,13 +1226,14 @@
 
     applyMode(S.theme);
     setAccidental('SHARPS');
-    changeReference(0);
 
     $$('.segmented button').forEach((b) => b.addEventListener('click', () => setAccidental(b.dataset.acc)));
-    $$('[data-ref]').forEach((b) => b.addEventListener('click', () => changeReference(Number(b.dataset.ref))));
     $$('[data-toggle-theme]').forEach((b) => b.addEventListener('click', toggleMode));
-    $('#identifyBtn').addEventListener('click', () => openSheet('identify'));
-    $('#tuningChip').addEventListener('click', () => openSheet('tuning'));
+    $('#identifyBtn').addEventListener('click', openSheet);
+    el.tuningChips.addEventListener('click', (e) => {
+      const chip = e.target.closest('[data-tuning]');
+      if (chip) setTuning(Number(chip.dataset.tuning));
+    });
     $('#backBtn').addEventListener('click', closeInstrumentTuning);
     $('#appLogo').addEventListener('click', (e) => spin(e.currentTarget));
     el.instAvatar.addEventListener('click', (e) => spin(e.currentTarget));
