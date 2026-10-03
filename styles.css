@@ -221,8 +221,9 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   background: linear-gradient(90deg, var(--accent), var(--accent-alt));
   color: var(--on-accent); font-size: 16px; font-weight: 600; white-space: nowrap;
 }
-.btn-primary .lead { font-size: 14px; }
 .btn-primary.lg { height: 52px; }
+/* En la barra superior ocupa lo que un selector de dos segmentos: 2 × 44 + 2 × 4. */
+.top-bar .btn-primary { width: 96px; flex: none; }
 
 /* ---------------------------------------------------------------- cabecera de instrumento */
 .inst-header { width: 100%; display: flex; align-items: center; }

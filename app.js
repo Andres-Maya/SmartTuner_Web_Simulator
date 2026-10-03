@@ -1111,10 +1111,9 @@
   // El texto del botón principal se reduce si no cabe (TextAutoSize.StepBased).
   function fitPrimaryButton() {
     $$('.btn-primary').forEach((btn) => {
-      const label = btn.querySelector('span:last-child') || btn;
-      if (!btn.clientWidth) return;
-      const lead = btn.querySelector('.lead');
-      const available = btn.clientWidth - 32 - (lead && lead !== label ? lead.offsetWidth + 8 : 0);
+      const label = btn.querySelector('span');
+      if (!label || !btn.clientWidth) return;
+      const available = btn.clientWidth - 32;
       let size = 16;
       label.style.fontSize = `${size}px`;
       while (label.scrollWidth > available && size > 10) {
