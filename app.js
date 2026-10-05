@@ -95,10 +95,10 @@
   const mixRgb = (x, y, t) => ({ r: x.r + (y.r - x.r) * t, g: x.g + (y.g - x.g) * t, b: x.b + (y.b - x.b) * t, a: x.a + (y.a - x.a) * t });
 
   const PALETTE = {
-    // Modo oscuro: tinta azulada y el verde lima del logo.
+    // Modo oscuro: tinta azulada y el celeste del logo.
     ink950: hex('#05070F'), ink900: hex('#090D1C'), ink800: hex('#131A33'), ink700: hex('#1C2447'),
     mist50: hex('#EDEFF7'), mist400: hex('#8A93B2'),
-    lime400: hex('#A3E635'), spring400: hex('#4ADE80'),
+    sky400: hex('#38BDF8'), cyan400: hex('#22D3EE'),
     mint400: hex('#3DDC97'), amber300: hex('#FFC857'), coral400: hex('#FF6B6B'),
     // Modo claro: papel crema y madera.
     sand50: hex('#FAF9F4'), sand100: hex('#F1F0EB'), sand200: hex('#E9E6DC'), sand300: hex('#DDD8C9'),
@@ -114,7 +114,7 @@
       background: PALETTE.ink900, backgroundDeep: PALETTE.ink950,
       surface: PALETTE.ink800, surfaceHigh: PALETTE.ink700,
       textPrimary: PALETTE.mist50, textMuted: PALETTE.mist400,
-      accent: PALETTE.lime400, accentAlt: PALETTE.spring400, onAccent: PALETTE.ink950,
+      accent: PALETTE.sky400, accentAlt: PALETTE.cyan400, onAccent: PALETTE.ink950,
       inTune: PALETTE.mint400, nearlyInTune: PALETTE.amber300, outOfTune: PALETTE.coral400,
       track: alpha(PALETTE.white, 0.10), tick: alpha(PALETTE.white, 0.30), staffLine: alpha(PALETTE.white, 0.40),
       display: PALETTE.ink950, displayFrame: alpha(PALETTE.white, 0.07),
@@ -906,7 +906,7 @@
   }
 
   // ================================================================= hojas modales
-  const neonSrc = (icon) => `assets/neon/${icon}_lime.png`;
+  const neonSrc = (icon) => `assets/neon/${icon}.png`;
 
   /**
    * El instrumento en grande (InstrumentGlyph.kt): tubo de neón en el modo oscuro y el
@@ -1074,7 +1074,7 @@
     root.setProperty('--display', toHex(c.display));
     root.setProperty('--display-frame', css(c.displayFrame));
     // El logo es el neón recortado en círculo en oscuro y el mismo dibujo a trazo en claro.
-    $$('[data-logo]').forEach((img) => { img.src = isDark() ? 'assets/logo/logo_lime.png' : 'assets/logo/logo_line.png'; });
+    $$('[data-logo]').forEach((img) => { img.src = isDark() ? 'assets/logo/logo_neon.png' : 'assets/logo/logo_line.png'; });
     if (S.instrument) el.instAvatar.innerHTML = instrumentGlyph(S.instrument.icon);
     drawModeIcons();
     dials.chromatic.color = null;

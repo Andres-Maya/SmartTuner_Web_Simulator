@@ -14,7 +14,7 @@
 <header class="page-head">
   <div class="eyebrow"><span class="dot"></span>SmartTuner · Sistema de diseño</div>
   <h1>Mockup interactivo de la app</h1>
-  <p>Pantallas, visor, arco de luces e iconos construidos con los elementos del paquete <em>Visor, arco e iconos</em> y el frontend Compose de SmartTuner. Toca los controles del teléfono; el panel de la derecha hace de micrófono. El botón de sol/luna alterna los dos modos: neón lima sobre tinta y papel crema con tinta marrón.</p>
+  <p>Pantallas, visor, arco de luces e iconos construidos con los elementos del paquete <em>Visor, arco e iconos</em> y el frontend Compose de SmartTuner. Toca los controles del teléfono; el panel de la derecha hace de micrófono. El botón de sol/luna alterna los dos modos: neón celeste sobre tinta y papel crema con tinta marrón.</p>
   <div class="head-actions">
     <!-- /releases/latest/download/ siempre sirve la última versión: publicar otra no obliga a tocar esta página. -->
     <a class="download" href="https://github.com/Andres-Maya/SmartTuner/releases/latest/download/SmartTuner.apk">
@@ -55,10 +55,11 @@
                   <div class="app-title">SmartTuner</div>
                   <div class="app-sub">Afinador cromático</div>
                 </div>
-                <!-- Ocupa justo el hueco de un selector de dos segmentos, para no cortar el nombre de la app. -->
-                <button class="btn-primary touch" id="identifyBtn" aria-label="Identificar instrumento"><span>Identificar</span></button>
                 <button class="icon-circle" data-toggle-theme aria-label="Cambiar al modo claro"><svg class="mode-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"></svg></button>
               </div>
+
+              <!-- Entre el título y el afinador, alineado con el logo y del ancho de su texto. -->
+              <button class="btn-primary touch identify" id="identifyBtn"><span>✦&ensp;Identificar instrumento</span></button>
 
               <div class="weight"></div>
               <div class="visor" data-visor="chromatic"></div>
@@ -165,7 +166,7 @@
     </div>
 
     <ol class="sim-flow">
-      <li>Pulsa <b>Identificar</b>, arriba: aparece la lista de instrumentos y sus afinaciones.</li>
+      <li>Pulsa <b>Identificar instrumento</b>, bajo el título: aparece la lista de instrumentos y sus afinaciones.</li>
       <li>Elige instrumento y tipo, y pulsa <b>Aceptar</b>.</li>
       <li>Toca una tarjeta de cuerda para oír su referencia y afínala con el simulador.</li>
       <li><kbd>Esc</kbd> hace de botón Atrás de Android.</li>
@@ -179,7 +180,7 @@
 
   <div class="modes-grid">
     <article class="mode-card">
-      <header><span class="mode-dot dark"></span><h3>Oscuro · neón lima sobre tinta</h3></header>
+      <header><span class="mode-dot dark"></span><h3>Oscuro · neón celeste sobre tinta</h3></header>
       <div class="tokens" data-tokens="dark"></div>
     </article>
     <article class="mode-card">
@@ -205,7 +206,7 @@
         <li><b>Significado del color:</b> afinado / cerca / lejos siguen siendo verde, ámbar y coral, pero en claro bajan de tono (<code>#1F7043</code>, <code>#8E6110</code>, <code>#B23A32</code>) para pasar de 4.5:1 de contraste sobre el papel.</li>
         <li><b>Umbrales:</b> ±5 ¢ afinado, degradado hasta 20 ¢ y de ahí a 50 ¢, idénticos en ambos modos.</li>
         <li><b>Espaciado, formas y tamaños:</b> los mismos tokens; solo cambian colores y qué se dibuja.</li>
-        <li><b>Una pantalla, una acción:</b> en ambos modos el afinador muestra visor, lecturas y estado, y nada más. <b>Identificar</b> va en la barra superior y el selector ♯/♭, abajo en el centro; en la afinación por instrumento el selector no aparece.</li>
+        <li><b>Una pantalla, una acción:</b> en ambos modos el afinador muestra visor, lecturas y estado, y nada más. <b>Identificar instrumento</b> va bajo el título, a la izquierda, y el selector ♯/♭, abajo en el centro; en la afinación por instrumento el selector no aparece.</li>
         <li><b>Tipo de instrumento:</b> las variantes (4, 5 o 6 cuerdas…) van como fichas bajo la cabecera, visibles sin abrir ningún menú.</li>
         <li><b>Arranque:</b> la app sigue al modo del sistema hasta que alguien toca el botón; a partir de ahí manda esa elección.</li>
       </ul>

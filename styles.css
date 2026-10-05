@@ -4,8 +4,8 @@
 
 :root {
   /* Valores del modo oscuro (DarkTunerColors). app.js reescribe estos tokens al cambiar de modo. */
-  --accent: #A3E635;
-  --accent-alt: #4ADE80;
+  --accent: #38BDF8;
+  --accent-alt: #22D3EE;
   --on-accent: #05070F;
   --bg: #090D1C;
   --bg-deep: #05070F;
@@ -222,8 +222,8 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   color: var(--on-accent); font-size: 16px; font-weight: 600; white-space: nowrap;
 }
 .btn-primary.lg { height: 52px; }
-/* En la barra superior ocupa lo que un selector de dos segmentos: 2 × 44 + 2 × 4. */
-.top-bar .btn-primary { width: 96px; flex: none; }
+/* Suelto bajo el título: rectángulo de esquinas redondeadas (chip, 12), del ancho de su texto. */
+.btn-primary.identify { margin-top: 16px; width: auto; align-self: flex-start; border-radius: 12px; }
 
 /* ---------------------------------------------------------------- cabecera de instrumento */
 .inst-header { width: 100%; display: flex; align-items: center; }
@@ -426,7 +426,7 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius
 .mode-card li { margin-bottom: 8px; }
 .mode-card li b { color: var(--text); font-weight: 600; }
 .mode-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
-.mode-dot.dark { background: linear-gradient(135deg, #A3E635, #4ADE80); box-shadow: 0 0 0 2px #090D1C; }
+.mode-dot.dark { background: linear-gradient(135deg, #38BDF8, #22D3EE); box-shadow: 0 0 0 2px #090D1C; }
 .mode-dot.light { background: linear-gradient(135deg, #7A5A24, #A8823C); box-shadow: 0 0 0 2px #F1F0EB; }
 .tokens { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; }
 .token { display: flex; align-items: center; gap: 8px; font-size: 12px; }
