@@ -100,9 +100,10 @@
     mist50: hex('#EDEFF7'), mist400: hex('#8A93B2'),
     sky400: hex('#38BDF8'), cyan400: hex('#22D3EE'),
     mint400: hex('#3DDC97'), amber300: hex('#FFC857'), coral400: hex('#FF6B6B'),
-    // Modo claro: papel crema y madera.
+    // Modo claro: papel crema con tinta oscura y un azul sereno para las acciones.
     sand50: hex('#FAF9F4'), sand100: hex('#F1F0EB'), sand200: hex('#E9E6DC'), sand300: hex('#DDD8C9'),
-    bark900: hex('#33291A'), bark600: hex('#7A5A24'), bark400: hex('#A8823C'), clay400: hex('#746A58'),
+    bark900: hex('#33291A'), clay400: hex('#746A58'),
+    azure600: hex('#3F72AF'), azure400: hex('#5B8DC9'),
     moss600: hex('#1F7043'), honey600: hex('#8E6110'), brick600: hex('#B23A32'),
     white: hex('#FFFFFF'),
   };
@@ -125,7 +126,8 @@
       background: PALETTE.sand100, backgroundDeep: PALETTE.sand200,
       surface: PALETTE.sand50, surfaceHigh: PALETTE.sand200,
       textPrimary: PALETTE.bark900, textMuted: PALETTE.clay400,
-      accent: PALETTE.bark600, accentAlt: PALETTE.bark400, onAccent: PALETTE.sand50,
+      // Un azul con cuerpo: hace de texto y de trazo sobre el crema, y un pastel ahí no se lee.
+      accent: PALETTE.azure600, accentAlt: PALETTE.azure400, onAccent: PALETTE.sand50,
       inTune: PALETTE.moss600, nearlyInTune: PALETTE.honey600, outOfTune: PALETTE.brick600,
       track: alpha(PALETTE.bark900, 0.10), tick: alpha(PALETTE.bark900, 0.26), staffLine: alpha(PALETTE.bark900, 0.35),
       // El "cristal" del visor va un punto más oscuro que el papel, como un LCD apagado.
@@ -735,29 +737,18 @@
     else text = `Cuerda ${v.match.number} aguda · baja`;
     renderStatus(el.statusInstrument, text, sounding != null ? c.accent : color, sounding == null && !v.active, sounding != null || !v.active);
 
-    // En el modo claro las cuerdas van sueltas sobre el papel, sin recuadro que las encierre.
-    const boxed = isDark();
     for (const card of stringCards) {
       const isActive = v.active && v.match.number === card.n;
       const isSelected = S.selectedString === card.n;
       const isTuned = tracker.tuned.has(card.n);
       const border = isActive ? color : isTuned ? c.inTune : isSelected ? c.accent : alpha(c.accent, 0);
-      card.card.classList.toggle('plain', !boxed);
-      card.wrap.classList.toggle('round', !boxed);
       setStyle(card.card, 'borderColor', css(border));
       const bg = isTuned ? alpha(c.inTune, 0.12) : isSelected ? alpha(c.accent, 0.12) : c.surface;
       setStyle(card.card, 'backgroundColor', css(bg));
-      if (card.min !== card.card.offsetWidth) {
-        card.min = card.card.offsetWidth;
-        card.wrap.style.setProperty('--sc-min', `${card.min}px`);
-      }
       card.card.setAttribute('aria-checked', String(isSelected));
       setStyle(card.flag, 'backgroundColor', isSelected ? css(c.accent) : 'transparent');
       setStyle(card.num, 'color', css(isTuned ? c.inTune : isActive ? color : isSelected ? c.accent : c.textMuted));
-      // Sin caja detrás, el color de la nota es lo que cuenta en qué estado está.
-      setStyle(card.note, 'color', css(
-        boxed ? c.textPrimary : isTuned ? c.inTune : isActive ? color : isSelected ? c.accent : c.textPrimary,
-      ));
+      setStyle(card.note, 'color', css(c.textPrimary));
       setText(card.note, noteName(card.string.midi, S.accidental).label);
       setText(card.hz, midiToFreq(card.string.midi, S.a4).toFixed(1));
 
@@ -792,6 +783,17 @@
     $$('.segmented button').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.acc === style)));
     renderSimStrings();
     renderSimNote();
+  }
+
+  // Aviso de un segundo al cambiar entre sostenidos y bemoles; cada toque lo reinicia.
+  const NOTICE_MILLIS = 1000;
+  let noticeTimer = 0;
+  function announceAccidental(style) {
+    const notice = $('#accNotice');
+    setText(notice, style === 'SHARPS' ? 'Ahora verás las notas con sostenidos ♯' : 'Ahora verás las notas con bemoles ♭');
+    notice.classList.add('show');
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => notice.classList.remove('show'), 150 + NOTICE_MILLIS);
   }
 
   function acceptPick() {
@@ -1074,7 +1076,10 @@
     root.setProperty('--display', toHex(c.display));
     root.setProperty('--display-frame', css(c.displayFrame));
     // El logo es el neón recortado en círculo en oscuro y el mismo dibujo a trazo en claro.
-    $$('[data-logo]').forEach((img) => { img.src = isDark() ? 'assets/logo/logo_neon.png' : 'assets/logo/logo_line.png'; });
+    $$('[data-logo]').forEach((img) => {
+      img.src = isDark() ? 'assets/logo/logo_neon.png' : 'assets/logo/logo_line.png';
+      img.parentElement.classList.toggle('line', !isDark());
+    });
     if (S.instrument) el.instAvatar.innerHTML = instrumentGlyph(S.instrument.icon);
     drawModeIcons();
     dials.chromatic.color = null;
@@ -1226,7 +1231,10 @@
     applyMode(S.theme);
     setAccidental('SHARPS');
 
-    $$('.segmented button').forEach((b) => b.addEventListener('click', () => setAccidental(b.dataset.acc)));
+    $$('.segmented button').forEach((b) => b.addEventListener('click', () => {
+      setAccidental(b.dataset.acc);
+      announceAccidental(b.dataset.acc);
+    }));
     $$('[data-toggle-theme]').forEach((b) => b.addEventListener('click', toggleMode));
     $('#identifyBtn').addEventListener('click', openSheet);
     el.tuningChips.addEventListener('click', (e) => {

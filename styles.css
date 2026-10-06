@@ -2,6 +2,18 @@
    Los valores salen de Tokens.kt (TunerSpacing, TunerSizes, TunerShapes, TunerTypography).
    Los colores los escribe app.js en :root según el modo (DarkTunerColors / LightTunerColors). */
 
+/* ♯ y ♭ con el mismo dibujo que en Android, donde salen de Noto Sans Symbols: el de Roboto
+   en la web es recto. El rango limita esta fuente a las dos alteraciones (y el becuadro). */
+@font-face {
+  font-family: "SmartTuner Accidentals";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: local("Noto Sans Symbols"),
+    url(https://fonts.gstatic.com/s/notosanssymbols/v47/rP2up3q65FkAtHfwd-eIS2brbDN6gxP34F9jRRCe4W3gfQ8QA_9Edkw.woff2) format("woff2");
+  unicode-range: U+266D-266F;
+}
+
 :root {
   /* Valores del modo oscuro (DarkTunerColors). app.js reescribe estos tokens al cambiar de modo. */
   --accent: #38BDF8;
@@ -19,7 +31,7 @@
   --nearly: #FFC857;
   --out-tune: #FF6B6B;
 
-  --font: Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font: "SmartTuner Accidentals", Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "Roboto Mono", ui-monospace, monospace;
   --fast-out-slow-in: cubic-bezier(.4, 0, .2, 1);
 }
@@ -133,6 +145,13 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .top-bar { width: 100%; display: flex; align-items: center; }
 .logo { width: 38px; height: 38px; border-radius: 50%; flex: none; }
 .logo img { width: 100%; height: 100%; border-radius: 50%; display: block; }
+/* En claro el logo es solo el trazo y el color lo pone el tema, como en AppLogo.kt. */
+.logo.line {
+  border-radius: 0; background: var(--accent);
+  -webkit-mask: url(assets/logo/logo_line.png) center / contain no-repeat;
+  mask: url(assets/logo/logo_line.png) center / contain no-repeat;
+}
+.logo.line img { visibility: hidden; }
 .brand { flex: 1; min-width: 0; margin-left: 8px; }
 .app-title { font-size: 22px; font-weight: 700; line-height: 28px; white-space: nowrap; }
 .app-sub { font-size: 13px; line-height: 18px; color: var(--muted); white-space: nowrap; }
@@ -141,11 +160,27 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .spin.spinning { scale: 1.12; transition: transform 700ms var(--fast-out-slow-in), scale 400ms cubic-bezier(.34, 1.56, .64, 1); }
 .spin:not(.spinning) { scale: 1; transition: transform 700ms var(--fast-out-slow-in), scale 450ms cubic-bezier(.34, 1.56, .64, 1); }
 
+/* Aviso de un segundo al cambiar entre sostenidos y bemoles (TransientMessage). */
+.notice-slot { width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.notice {
+  margin-bottom: 12px; padding: 8px 16px; border-radius: 999px;
+  background: var(--surface-high); color: var(--text);
+  font-size: 13px; line-height: 18px; text-align: center;
+  opacity: 0; transition: opacity 400ms linear; pointer-events: none;
+}
+.notice.show { opacity: 1; transition: opacity 150ms linear; }
+
+/* Pie del afinador: el selector centrado, algo más arriba que el botón de la IA de la esquina. */
+.bottom-bar { position: relative; width: 100%; height: 66px; }
+.bottom-bar .segmented { position: absolute; left: 50%; top: 0; transform: translateX(-50%); }
+
 /* SegmentedToggle */
 .segmented { display: flex; padding: 4px; border-radius: 999px; background: var(--surface-high); flex: none; }
 .segmented button {
   width: 44px; height: 34px; border-radius: 999px;
-  font-size: 20px; font-weight: 700; color: var(--muted);
+  /* El ♯ de Noto Sans Symbols cuelga por debajo de la línea base: el relleno lo recentra. */
+  display: grid; place-items: center; padding-bottom: 4px;
+  font-size: 20px; font-weight: 700; line-height: 1; color: var(--muted);
   transition: background-color 180ms, color 180ms;
 }
 .segmented button[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
@@ -178,7 +213,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   border: 1.5px solid color-mix(in srgb, var(--text) 45%, transparent);
   display: flex; align-items: center; justify-content: center;
 }
-.note-glyph { display: flex; align-items: center; font-family: "Abril Fatface", Georgia, serif; }
+.note-glyph { display: flex; align-items: center; font-family: "SmartTuner Accidentals", "Abril Fatface", Georgia, serif; }
 .note-glyph .ng-letter { font-size: 86px; line-height: 90px; color: var(--text); }
 .note-glyph .ng-side { display: flex; flex-direction: column; align-items: flex-start; padding-left: 2px; color: var(--accent); }
 .note-glyph .ng-side span { font-size: 30px; line-height: 34px; min-height: 34px; }
@@ -222,15 +257,22 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   color: var(--on-accent); font-size: 16px; font-weight: 600; white-space: nowrap;
 }
 .btn-primary.lg { height: 52px; }
-/* Suelto bajo el título: rectángulo de esquinas redondeadas (chip, 12), del ancho de su texto. */
-.btn-primary.identify { margin-top: 16px; width: auto; align-self: flex-start; border-radius: 12px; }
+/* PrimaryIconButton: la acción principal reducida a su símbolo. */
+.btn-icon {
+  position: absolute; right: 0; bottom: 0; overflow: hidden;
+  width: 52px; height: 52px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: linear-gradient(90deg, var(--accent), var(--accent-alt));
+  color: var(--on-accent);
+}
 
 /* ---------------------------------------------------------------- cabecera de instrumento */
 .inst-header { width: 100%; display: flex; align-items: center; }
 .neon { flex: none; display: block; }
 .neon img, .neon svg { width: 100%; height: 100%; display: block; }
-/* En claro el instrumento va a trazo, teñido con el acento (InstrumentGlyph). */
-.neon svg { color: var(--accent); }
+/* En claro el instrumento va a trazo, teñido con el acento (InstrumentGlyph). El neón trae
+   margen dentro de su imagen y el trazo no: se encoge lo mismo para que midan igual. */
+.neon svg { width: 78%; height: 78%; margin: 11%; color: var(--accent); }
 .avatar { width: 56px; height: 56px; margin-left: 8px; }
 .inst-titles { flex: 1; min-width: 0; margin-left: 8px; }
 .inst-name { font-size: 22px; font-weight: 700; line-height: 28px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -242,7 +284,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   position: relative; overflow: hidden; flex: none;
   padding: 8px 16px; border-radius: 999px;
   background: var(--surface-high); color: var(--muted);
-  font-size: 14px; font-weight: 600; white-space: nowrap;
+  font-size: 14px; font-weight: 600; line-height: 16px; white-space: nowrap;
   transition: background-color 200ms, color 200ms;
 }
 .tuning-chip[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
@@ -276,20 +318,6 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   to { inset: -22px; border-radius: 38px; opacity: 0; }
 }
 
-/* Modo claro: las cuerdas van sueltas sobre el papel y la onda es circular. */
-.string-card.plain { background: none !important; border-color: transparent !important; }
-.sc-wrap.round .ring {
-  inset: auto; left: 50%; top: 50%;
-  width: var(--sc-min, 44px); height: var(--sc-min, 44px);
-  margin: calc(var(--sc-min, 44px) / -2) 0 0 calc(var(--sc-min, 44px) / -2);
-  border-radius: 50%; border-width: 1.6px;
-}
-.sc-wrap.round.wave .ring.r1 { animation: waveRound 900ms cubic-bezier(0, 0, .2, 1) forwards; }
-.sc-wrap.round.wave .ring.r2 { animation: waveRound 720ms cubic-bezier(0, 0, .2, 1) 180ms forwards; }
-@keyframes waveRound {
-  from { transform: scale(.84); opacity: .55; }
-  to { transform: scale(2.64); opacity: 0; }
-}
 .footer-hint { font-size: 14px; line-height: 20px; color: var(--muted); text-align: center; }
 .footer-hint.done { color: var(--in-tune); font-weight: 600; }
 
@@ -346,7 +374,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .option[aria-checked="true"] .radio { border-color: var(--accent); }
 .option[aria-checked="true"] .radio::before { transform: scale(1); }
 
-.btn-row { display: flex; gap: 12px; }
+.btn-row { display: flex; align-items: center; gap: 12px; }
 .btn-row > * { flex: 1 1 0; }
 .btn-secondary {
   position: relative; overflow: hidden;
@@ -427,7 +455,7 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius
 .mode-card li b { color: var(--text); font-weight: 600; }
 .mode-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
 .mode-dot.dark { background: linear-gradient(135deg, #38BDF8, #22D3EE); box-shadow: 0 0 0 2px #090D1C; }
-.mode-dot.light { background: linear-gradient(135deg, #7A5A24, #A8823C); box-shadow: 0 0 0 2px #F1F0EB; }
+.mode-dot.light { background: linear-gradient(135deg, #3F72AF, #5B8DC9); box-shadow: 0 0 0 2px #F1F0EB; }
 .tokens { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px 16px; }
 .token { display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .token i { width: 18px; height: 18px; border-radius: 5px; flex: none; border: 1px solid rgba(128, 128, 128, .3); }

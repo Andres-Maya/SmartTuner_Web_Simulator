@@ -14,7 +14,7 @@
 <header class="page-head">
   <div class="eyebrow"><span class="dot"></span>SmartTuner · Sistema de diseño</div>
   <h1>Mockup interactivo de la app</h1>
-  <p>Pantallas, visor, arco de luces e iconos construidos con los elementos del paquete <em>Visor, arco e iconos</em> y el frontend Compose de SmartTuner. Toca los controles del teléfono; el panel de la derecha hace de micrófono. El botón de sol/luna alterna los dos modos: neón celeste sobre tinta y papel crema con tinta marrón.</p>
+  <p>Pantallas, visor, arco de luces e iconos construidos con los elementos del paquete <em>Visor, arco e iconos</em> y el frontend Compose de SmartTuner. Toca los controles del teléfono; el panel de la derecha hace de micrófono. El botón de sol/luna alterna los dos modos: neón celeste sobre tinta y papel crema con tinta azul.</p>
   <div class="head-actions">
     <!-- /releases/latest/download/ siempre sirve la última versión: publicar otra no obliga a tocar esta página. -->
     <a class="download" href="https://github.com/Andres-Maya/SmartTuner/releases/latest/download/SmartTuner.apk">
@@ -58,21 +58,28 @@
                 <button class="icon-circle" data-toggle-theme aria-label="Cambiar al modo claro"><svg class="mode-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"></svg></button>
               </div>
 
-              <!-- Entre el título y el afinador, alineado con el logo y del ancho de su texto. -->
-              <button class="btn-primary touch identify" id="identifyBtn"><span>✦&ensp;Identificar instrumento</span></button>
-
               <div class="weight"></div>
               <div class="visor" data-visor="chromatic"></div>
               <div class="gap-md"></div>
               <div class="stats" data-stats="chromatic"></div>
               <div class="gap-md"></div>
               <div class="status-text" data-status="chromatic"></div>
-              <div class="weight"></div>
+              <!-- El aviso flota en el hueco de encima del selector, sin empujar nada al aparecer. -->
+              <div class="weight notice-slot"><div class="notice" id="accNotice" role="status" aria-live="polite"></div></div>
 
-              <!-- Solo aquí: en la afinación por instrumento las notas ya vienen dadas por las cuerdas. -->
-              <div class="segmented" role="radiogroup" aria-label="Alternar entre sostenidos y bemoles">
-                <button role="radio" data-acc="SHARPS">♯</button>
-                <button role="radio" data-acc="FLATS">♭</button>
+              <div class="bottom-bar">
+                <!-- Solo aquí: en la afinación por instrumento las notas ya vienen dadas por las cuerdas. -->
+                <div class="segmented" role="radiogroup" aria-label="Alternar entre sostenidos y bemoles">
+                  <button role="radio" data-acc="SHARPS">♯</button>
+                  <button role="radio" data-acc="FLATS">♭</button>
+                </div>
+                <!-- Solo el símbolo de la IA, en la esquina (PrimaryIconButton + SparkleIcon). -->
+                <button class="btn-icon touch" id="identifyBtn" aria-label="Identificar instrumento">
+                  <svg width="26" height="26" viewBox="0 0 26 26" fill="currentColor" aria-hidden="true">
+                    <path d="M10.92 4.16Q12.667 13.333 21.84 15.08Q12.667 16.827 10.92 26Q9.173 16.827 0 15.08Q9.173 13.333 10.92 4.16Z"/>
+                    <path d="M21.06 0Q21.85 4.15 26 4.94Q21.85 5.73 21.06 9.88Q20.27 5.73 16.12 4.94Q20.27 4.15 21.06 0Z"/>
+                  </svg>
+                </button>
               </div>
             </div>
           </section>
@@ -166,7 +173,7 @@
     </div>
 
     <ol class="sim-flow">
-      <li>Pulsa <b>Identificar instrumento</b>, bajo el título: aparece la lista de instrumentos y sus afinaciones.</li>
+      <li>Pulsa el botón de la <b>IA</b> (✦), abajo a la derecha: aparece la lista de instrumentos y sus afinaciones.</li>
       <li>Elige instrumento y tipo, y pulsa <b>Aceptar</b>.</li>
       <li>Toca una tarjeta de cuerda para oír su referencia y afínala con el simulador.</li>
       <li><kbd>Esc</kbd> hace de botón Atrás de Android.</li>
@@ -184,7 +191,7 @@
       <div class="tokens" data-tokens="dark"></div>
     </article>
     <article class="mode-card">
-      <header><span class="mode-dot light"></span><h3>Claro · papel crema y tinta marrón</h3></header>
+      <header><span class="mode-dot light"></span><h3>Claro · papel crema y tinta azul</h3></header>
       <div class="tokens" data-tokens="light"></div>
     </article>
   </div>
@@ -196,7 +203,7 @@
         <li><b>Visor:</b> el arco de luces y los siete segmentos dejan paso al <b>PaperDial</b>: la nota escrita en Abril Fatface dentro de un aro sin relleno (168 dp) y una regleta recta de ±50 ¢ con una aguja que crece al dar en la nota.</li>
         <li><b>Hercios:</b> viajan bajo la aguja, así que la columna FRECUENCIA desaparece de las lecturas.</li>
         <li><b>Brillos:</b> el token <code>glow</code> pasa de 1 a 0 y apaga halos, auras y el núcleo blanco de las luces.</li>
-        <li><b>Cuerdas:</b> sin recuadro ni fondo; el estado lo dice el color de la nota, y la onda al afinar es circular en vez de rectangular.</li>
+        <li><b>Acento:</b> el celeste de neón pasa a un azul sereno (<code>#3F72AF</code>), que también se lee como texto sobre el papel.</li>
         <li><b>Iconos y logo:</b> el neón se cambia por el mismo dibujo a trazo, teñido con el acento.</li>
       </ul>
     </article>
@@ -206,7 +213,8 @@
         <li><b>Significado del color:</b> afinado / cerca / lejos siguen siendo verde, ámbar y coral, pero en claro bajan de tono (<code>#1F7043</code>, <code>#8E6110</code>, <code>#B23A32</code>) para pasar de 4.5:1 de contraste sobre el papel.</li>
         <li><b>Umbrales:</b> ±5 ¢ afinado, degradado hasta 20 ¢ y de ahí a 50 ¢, idénticos en ambos modos.</li>
         <li><b>Espaciado, formas y tamaños:</b> los mismos tokens; solo cambian colores y qué se dibuja.</li>
-        <li><b>Una pantalla, una acción:</b> en ambos modos el afinador muestra visor, lecturas y estado, y nada más. <b>Identificar instrumento</b> va bajo el título, a la izquierda, y el selector ♯/♭, abajo en el centro; en la afinación por instrumento el selector no aparece.</li>
+        <li><b>Una pantalla, una acción:</b> en ambos modos el afinador muestra visor, lecturas y estado, y nada más. <b>Identificar instrumento</b> es un botón con solo el símbolo de la IA en la esquina inferior derecha, y el selector ♯/♭ va abajo en el centro, un poco más arriba; al tocarlo, un aviso de un segundo dice qué notación se verá. En la afinación por instrumento el selector no aparece.</li>
+        <li><b>Cuerdas:</b> la misma tarjeta con borde en los dos modos; el borde toma el color del estado (sonando, afinada o elegida).</li>
         <li><b>Tipo de instrumento:</b> las variantes (4, 5 o 6 cuerdas…) van como fichas bajo la cabecera, visibles sin abrir ningún menú.</li>
         <li><b>Arranque:</b> la app sigue al modo del sistema hasta que alguien toca el botón; a partir de ahí manda esa elección.</li>
       </ul>
