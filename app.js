@@ -8,37 +8,58 @@
  */
 (() => {
   // ================================================================= datos (Instrument.kt)
+  // Tipos (cuántas cuerdas) y, en cada uno, sus afinaciones: la estándar primero.
   const INSTRUMENTS = [
-    { id: 'GUITAR', name: 'Guitarra', icon: 'guitar', tunings: [
-      ['6 cuerdas', [64, 59, 55, 50, 45, 40]],
-      ['7 cuerdas', [64, 59, 55, 50, 45, 40, 35]],
-      ['Drop D', [64, 59, 55, 50, 45, 38]],
-      ['Medio tono abajo', [63, 58, 54, 49, 44, 39]],
+    { id: 'GUITAR', name: 'Guitarra', icon: 'guitar', types: [
+      [6, [
+        ['Estándar', [64, 59, 55, 50, 45, 40]],
+        ['Drop D', [64, 59, 55, 50, 45, 38]],
+        ['Medio tono abajo', [63, 58, 54, 49, 44, 39]],
+        ['Un tono abajo', [62, 57, 53, 48, 43, 38]],
+        ['Drop C', [62, 57, 53, 48, 43, 36]],
+        ['DADGAD', [62, 57, 55, 50, 45, 38]],
+        ['Open G', [62, 59, 55, 50, 43, 38]],
+        ['Open D', [62, 57, 54, 50, 45, 38]],
+      ]],
+      [7, [['Estándar', [64, 59, 55, 50, 45, 40, 35]], ['Drop A', [64, 59, 55, 50, 45, 40, 33]]]],
+      [8, [['Estándar', [64, 59, 55, 50, 45, 40, 35, 30]], ['Drop E', [64, 59, 55, 50, 45, 40, 35, 28]]]],
     ] },
-    { id: 'BASS', name: 'Bajo', icon: 'bass', tunings: [
-      ['4 cuerdas', [43, 38, 33, 28]],
-      ['5 cuerdas', [43, 38, 33, 28, 23]],
-      ['6 cuerdas', [48, 43, 38, 33, 28, 23]],
+    { id: 'BASS', name: 'Bajo', icon: 'bass', types: [
+      [4, [
+        ['Estándar', [43, 38, 33, 28]],
+        ['Drop D', [43, 38, 33, 26]],
+        ['Medio tono abajo', [42, 37, 32, 27]],
+      ]],
+      [5, [['Estándar', [43, 38, 33, 28, 23]]]],
+      [6, [['Estándar', [48, 43, 38, 33, 28, 23]]]],
     ] },
-    { id: 'VIOLIN', name: 'Violín', icon: 'violin', tunings: [['4 cuerdas', [76, 69, 62, 55]]] },
-    { id: 'VIOLA', name: 'Viola', icon: 'violin', tunings: [
-      ['4 cuerdas', [69, 62, 55, 48]],
-      ['5 cuerdas', [76, 69, 62, 55, 48]],
+    { id: 'VIOLIN', name: 'Violín', icon: 'violin', types: [[4, [['Estándar', [76, 69, 62, 55]]]]] },
+    { id: 'VIOLA', name: 'Viola', icon: 'violin', types: [
+      [4, [['Estándar', [69, 62, 55, 48]]]],
+      [5, [['Estándar', [76, 69, 62, 55, 48]]]],
     ] },
-    { id: 'CELLO', name: 'Violonchelo', icon: 'cello', tunings: [
-      ['4 cuerdas', [57, 50, 43, 36]],
-      ['5 cuerdas', [64, 57, 50, 43, 36]],
+    { id: 'CELLO', name: 'Violonchelo', icon: 'cello', types: [
+      [4, [['Estándar', [57, 50, 43, 36]]]],
+      [5, [['Estándar', [64, 57, 50, 43, 36]]]],
     ] },
-    { id: 'UKULELE', name: 'Ukelele', icon: 'ukulele', tunings: [
-      ['Soprano · GCEA', [69, 64, 60, 67]],
-      ['Tenor · sol grave', [69, 64, 60, 55]],
-      ['Barítono · DGBE', [62, 59, 55, 50]],
+    { id: 'UKULELE', name: 'Ukelele', icon: 'ukulele', types: [
+      [4, [
+        ['Estándar · GCEA', [69, 64, 60, 67]],
+        ['Sol grave · GCEA', [69, 64, 60, 55]],
+        ['Barítono · DGBE', [62, 59, 55, 50]],
+        ['Re · ADF♯B', [71, 66, 62, 69]],
+      ]],
     ] },
   ].map((inst) => ({
     ...inst,
-    tunings: inst.tunings.map(([name, midis]) => ({
-      name,
-      strings: midis.map((midi, i) => ({ number: i + 1, midi })),
+    types: inst.types.map(([count, tunings], ti) => ({
+      name: `${count} cuerdas`,
+      count,
+      tunings: tunings.map(([name, midis], i) => ({
+        name,
+        key: `std:${ti}:${i}`,
+        strings: midis.map((midi, n) => ({ number: n + 1, midi })),
+      })),
     })),
   }));
   const instrumentById = (id) => INSTRUMENTS.find((i) => i.id === id);
@@ -170,6 +191,23 @@
   const formatCents = (c) => `${c < 0 ? '-' : '+'}${Math.abs(Math.round(c))} ¢`;
   const stringLabels = (tuning, style) => [...tuning.strings].sort((a, b) => a.midi - b.midi).map((s) => noteName(s.midi, style).label).join(' ');
 
+  // ================================================================= afinaciones guardadas (SavedTuningStore.kt)
+  // En el teléfono van a SharedPreferences; aquí al almacenamiento del navegador, si lo hay.
+  const STORE_KEY = 'smarttuner.tunings';
+  function loadSaved() {
+    try {
+      const list = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+      if (!Array.isArray(list)) return [];
+      return list.filter((t) => t && instrumentById(t.inst) && typeof t.name === 'string' && Array.isArray(t.midis) && t.midis.length);
+    } catch (e) {
+      return [];
+    }
+  }
+  function persistSaved() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(S.saved)); } catch (e) { /* sin almacenamiento: dura lo que la pestaña */ }
+  }
+  const esc = (text) => String(text).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+
   // ================================================================= estado
   const S = {
     theme: 'dark',
@@ -178,7 +216,8 @@
     a4: 440,
     mode: 'chromatic',
     instrument: null,
-    tuningIndex: 0,
+    /** 'std:<tipo>:<afinación>' para las que trae la app, 'saved:<id>' para las guardadas. */
+    tuningKey: 'std:0:0',
     selectedString: null,
     soundingString: null,
     soundingUntil: 0,
@@ -187,6 +226,12 @@
     reading: null,
     instrumentReading: null,
     transitionUntil: 0,
+    transitionFrom: null,
+    saved: loadSaved(),
+    /** Afinación nueva en curso: { base, order, captured: {cuerda: midi}, selected }. */
+    add: null,
+    menuOpen: false,
+    dialog: false,
   };
   const sim = { on: true, midi: 45, cents: 12, autoTune: null };
 
@@ -205,8 +250,49 @@
     reset() { this.tuned.clear(); this.current = null; this.inStreak = this.outStreak = 0; },
   };
 
+  // NoteCaptureTracker: fija la nota que se sostiene afinada 10 lecturas (~0.5 s). La recién
+  // fijada no vuelve a valer hasta que calle o cambie, para no copiarla en la cuerda siguiente.
+  const capture = {
+    current: null, streak: 0, blocked: null, silent: 0,
+    update(midi, cents) {
+      if (midi == null) {
+        this.restart();
+        if (++this.silent >= 6) this.blocked = null;
+        return null;
+      }
+      this.silent = 0;
+      if (midi !== this.blocked) this.blocked = null;
+      if (midi === this.blocked) return null;
+      if (midi !== this.current) { this.current = midi; this.streak = 0; }
+      this.streak = Math.abs(cents) <= IN_TUNE_CENTS ? this.streak + 1 : 0;
+      if (this.streak < 10) return null;
+      this.restart();
+      this.blocked = midi;
+      return midi;
+    },
+    restart() { this.current = null; this.streak = 0; },
+    reset() { this.restart(); this.blocked = null; this.silent = 0; },
+  };
+
   const isDark = () => S.theme === 'dark';
-  const currentTuning = () => S.instrument.tunings[S.tuningIndex];
+  const savedTuning = (t) => ({
+    key: `saved:${t.id}`, name: t.name, saved: t,
+    strings: t.midis.map((midi, i) => ({ number: i + 1, midi })),
+  });
+  /** Todas las del instrumento: las de la app por tipos y, detrás, las guardadas. */
+  const allTunings = (inst) => [
+    ...inst.types.flatMap((type) => type.tunings),
+    ...S.saved.filter((t) => t.inst === inst.id).map(savedTuning),
+  ];
+  /** El tipo de una afinación es el que tiene sus mismas cuerdas; las propias también encajan. */
+  const typeOf = (inst, tuning) => inst.types.find((type) => type.count === tuning.strings.length) || inst.types[0];
+  /** Las del tipo: las que trae la app y las guardadas con sus mismas cuerdas. */
+  const tuningsOf = (inst, type) => allTunings(inst).filter((t) => t.strings.length === type.count);
+  const currentTuning = () => {
+    const all = allTunings(S.instrument);
+    return all.find((t) => t.key === S.tuningKey) || all[0];
+  };
+  const currentType = () => typeOf(S.instrument, currentTuning());
   const orderedStrings = () => [...currentTuning().strings].sort((a, b) => b.number - a.number);
 
   // ================================================================= animaciones
@@ -589,6 +675,12 @@
       S.reading = { hasSignal: true, freq, nearest, cents: (m - nearest) * 100 };
     }
 
+    if (S.mode === 'add' && S.add && S.add.selected != null) {
+      const r = S.reading;
+      const midi = capture.update(r.hasSignal ? r.nearest : null, r.hasSignal ? r.cents : 0);
+      if (midi != null) captureNote(midi);
+    }
+
     S.instrumentReading = null;
     if (S.mode !== 'instrument') return;
     const tuning = currentTuning();
@@ -665,51 +757,90 @@
 
   function buildInstrumentScreen() {
     const inst = S.instrument;
-    const tuning = currentTuning();
     setText(el.instName, inst.name);
-    el.instAvatar.setAttribute('aria-label', inst.name);
-    el.instAvatar.innerHTML = instrumentGlyph(inst.icon);
-    renderTuningSelector();
+    // El tipo y la afinación se cambian desde el botón de la esquina; la cabecera dice cuáles
+    // están en uso. El tipo solo se nombra si el instrumento tiene más de uno.
+    const parts = [inst.types.length > 1 ? currentType().name : null, currentTuning().name, 'La 440'];
+    setText($('[data-ref-label]'), parts.filter(Boolean).join(' · '));
+    renderAvatars();
+    stringCards = buildCards(el.strings, orderedStrings(), (n) => `Afinar y escuchar la cuerda ${n}`, selectString);
+    renderSimStrings();
+  }
 
-    el.strings.innerHTML = orderedStrings().map((s) => `
+  /** El instrumento en grande en las cabeceras de sus tres pantallas. */
+  function renderAvatars() {
+    if (!S.instrument) return;
+    $$('[data-inst-avatar], #instAvatar').forEach((avatar) => {
+      avatar.setAttribute('aria-label', S.instrument.name);
+      avatar.innerHTML = instrumentGlyph(S.instrument.icon);
+    });
+  }
+
+  /** Tarjetas de cuerda (StringCard): se crean una vez y paintCard las repinta en cada cuadro. */
+  function buildCards(host, strings, ariaLabel, onSelect) {
+    host.innerHTML = strings.map((s) => `
       <div class="sc-wrap" data-n="${s.number}">
         <div class="aura"></div>
         <div class="ring r1"></div><div class="ring r2"></div>
-        <button class="string-card" role="radio" aria-checked="false" aria-label="Afinar y escuchar la cuerda ${s.number}">
+        <button class="string-card" role="radio" aria-checked="false" aria-label="${ariaLabel(s.number)}">
           <span class="flag"></span>
-          <span class="sc-num">${s.number}</span>
+          <span class="sc-num"></span>
           <span class="sc-note"></span>
           <span class="sc-hz"></span>
         </button>
       </div>`).join('');
-    stringCards = $$('.sc-wrap', el.strings).map((wrap) => {
+    return $$('.sc-wrap', host).map((wrap) => {
       const n = Number(wrap.dataset.n);
       const card = $('.string-card', wrap);
-      card.addEventListener('click', () => selectString(n));
+      card.addEventListener('click', () => onSelect(n));
       return {
         n, wrap, card, aura: $('.aura', wrap), flag: $('.flag', wrap), num: $('.sc-num', wrap),
         note: $('.sc-note', wrap), hz: $('.sc-hz', wrap),
-        string: tuning.strings.find((s) => s.number === n),
+        string: strings.find((s) => s.number === n),
         scale: new Spring(1, 1500, 1), beat: 0,
       };
     });
-    renderSimStrings();
   }
 
   /**
-   * Variantes del instrumento como fichas: la que está en uso va marcada y las demás se ven
-   * al lado, que es lo que cuenta que se pueden cambiar.
+   * Mientras te acercas a la afinación la tarjeta late cada vez más rápido y con más brillo.
+   * Con `placeholder` la cuerda aún no tiene nota y el número ocupa su lugar, atenuado.
    */
-  function renderTuningSelector() {
-    const tunings = S.instrument.tunings;
-    el.tuningSelector.hidden = tunings.length < 2;
-    if (el.tuningSelector.hidden) return;
-    el.tuningChips.innerHTML = tunings.map((t, i) => `
-      <button class="tuning-chip" role="radio" aria-checked="${i === S.tuningIndex}" data-tuning="${i}">${t.name}</button>`).join('');
+  function paintCard(card, o, dt) {
+    const c = S.colors;
+    const border = o.isActive ? o.color : o.isTuned ? c.inTune : o.isSelected ? c.accent : alpha(c.accent, 0);
+    setStyle(card.card, 'borderColor', css(border));
+    const bg = o.isTuned ? alpha(c.inTune, 0.12) : o.isSelected ? alpha(c.accent, 0.12) : c.surface;
+    setStyle(card.card, 'backgroundColor', css(bg));
+    card.card.setAttribute('aria-checked', String(o.isSelected));
+    setStyle(card.flag, 'backgroundColor', o.isSelected ? css(c.accent) : 'transparent');
+    setText(card.num, o.num);
+    setStyle(card.num, 'color', css(o.isTuned ? c.inTune : o.isActive ? o.color : o.isSelected ? c.accent : c.textMuted));
+    setText(card.note, o.note);
+    setStyle(card.note, 'color', css(!o.placeholder ? c.textPrimary : o.isSelected ? c.accent : c.textMuted));
+    setText(card.hz, o.hz);
+
+    const proximity = o.isActive && !o.isTuned ? 1 - clamp(Math.abs(o.cents) / 50, 0, 1) : 0;
+    card.beat = proximity > 0 ? (card.beat + dt * (0.8 + 2.6 * proximity)) % 1 : 0;
+    const pulse = Math.sin(card.beat * 2 * Math.PI) * 0.5 + 0.5;
+    const aura = proximity * (0.4 + 0.6 * pulse) * c.glow;
+    const radius = Math.max(card.card.offsetWidth, card.card.offsetHeight) * 0.8;
+    setStyle(card.aura, 'background', aura > 0.01
+      ? `radial-gradient(circle ${radius}px at 50% 50%, ${css(alpha(o.color, 0.45 * aura))}, ${css(alpha(o.color, 0))})`
+      : 'none');
+    card.scale.target = o.isActive ? 1.08 : 1;
+    card.scale.step(dt);
+    const s = card.scale.x * (1 + 0.05 * proximity * pulse);
+    setStyle(card.card, 'transform', `scale(${s.toFixed(4)})`);
   }
 
   function onStringTuned(number) {
-    const card = stringCards.find((c) => c.n === number);
+    wave(stringCards, number);
+  }
+
+  /** Onda de confirmación que sale de la tarjeta al quedar afinada. */
+  function wave(cards, number) {
+    const card = cards.find((c) => c.n === number);
     if (!card) return;
     card.wrap.classList.remove('wave');
     void card.wrap.offsetWidth;
@@ -739,31 +870,16 @@
 
     for (const card of stringCards) {
       const isActive = v.active && v.match.number === card.n;
-      const isSelected = S.selectedString === card.n;
-      const isTuned = tracker.tuned.has(card.n);
-      const border = isActive ? color : isTuned ? c.inTune : isSelected ? c.accent : alpha(c.accent, 0);
-      setStyle(card.card, 'borderColor', css(border));
-      const bg = isTuned ? alpha(c.inTune, 0.12) : isSelected ? alpha(c.accent, 0.12) : c.surface;
-      setStyle(card.card, 'backgroundColor', css(bg));
-      card.card.setAttribute('aria-checked', String(isSelected));
-      setStyle(card.flag, 'backgroundColor', isSelected ? css(c.accent) : 'transparent');
-      setStyle(card.num, 'color', css(isTuned ? c.inTune : isActive ? color : isSelected ? c.accent : c.textMuted));
-      setStyle(card.note, 'color', css(c.textPrimary));
-      setText(card.note, noteName(card.string.midi, S.accidental).label);
-      setText(card.hz, midiToFreq(card.string.midi, S.a4).toFixed(1));
-
-      const proximity = isActive && !isTuned ? 1 - clamp(Math.abs(v.cents) / 50, 0, 1) : 0;
-      card.beat = proximity > 0 ? (card.beat + dt * (0.8 + 2.6 * proximity)) % 1 : 0;
-      const pulse = Math.sin(card.beat * 2 * Math.PI) * 0.5 + 0.5;
-      const aura = proximity * (0.4 + 0.6 * pulse) * c.glow;
-      const radius = Math.max(card.card.offsetWidth, card.card.offsetHeight) * 0.8;
-      setStyle(card.aura, 'background', aura > 0.01
-        ? `radial-gradient(circle ${radius}px at 50% 50%, ${css(alpha(color, 0.45 * aura))}, ${css(alpha(color, 0))})`
-        : 'none');
-      card.scale.target = isActive ? 1.08 : 1;
-      card.scale.step(dt);
-      const s = card.scale.x * (1 + 0.05 * proximity * pulse);
-      setStyle(card.card, 'transform', `scale(${s.toFixed(4)})`);
+      paintCard(card, {
+        isActive,
+        isSelected: S.selectedString === card.n,
+        isTuned: tracker.tuned.has(card.n),
+        cents: v.cents,
+        color,
+        num: String(card.n),
+        note: noteName(card.string.midi, S.accidental).label,
+        hz: midiToFreq(card.string.midi, S.a4).toFixed(1),
+      }, dt);
     }
 
     const total = currentTuning().strings.length;
@@ -800,7 +916,7 @@
     const inst = instrumentById(S.pick.inst);
     closeSheet();
     S.instrument = inst;
-    S.tuningIndex = S.pick.tuning;
+    S.tuningKey = `std:${S.pick.type}:0`;
     S.selectedString = null;
     stopTone();
     tracker.reset();
@@ -813,21 +929,11 @@
   }
 
   function closeInstrumentTuning() {
+    setMenu(false);
     tracker.reset();
     stopTone();
     S.selectedString = null;
     navigate('chromatic');
-  }
-
-  function setTuning(index) {
-    if (index === S.tuningIndex) return;
-    S.tuningIndex = index;
-    tracker.reset();
-    S.selectedString = null;
-    stopTone();
-    buildInstrumentScreen();
-    const lowest = currentTuning().strings.reduce((a, b) => (a.midi < b.midi ? a : b));
-    setSim(lowest.midi, randomOffset());
   }
 
   function selectString(number) {
@@ -843,11 +949,15 @@
     if (sim.midi !== string.midi) setSim(string.midi, randomOffset());
   }
 
+  /** Lo adentro que está cada pantalla: decide hacia qué lado se desliza al cambiar. */
+  const DEPTH = { chromatic: 0, instrument: 1, add: 2, saved: 2, types: 2 };
+
   function navigate(to) {
-    const toInstrument = to === 'instrument';
-    const incoming = toInstrument ? el.instrumentScreen : el.chromaticScreen;
-    const outgoing = toInstrument ? el.chromaticScreen : el.instrumentScreen;
-    const dir = toInstrument ? 1 : -1;
+    const from = S.mode;
+    if (from === to) return;
+    const incoming = el.screens[to];
+    const outgoing = el.screens[from];
+    const dir = DEPTH[to] >= DEPTH[from] ? 1 : -1;
     S.mode = to;
     incoming.classList.add('no-anim');
     incoming.style.transform = `translateX(${dir * 100}%)`;
@@ -862,10 +972,318 @@
     outgoing.style.opacity = '0';
     outgoing.style.pointerEvents = 'none';
     outgoing.setAttribute('aria-hidden', 'true');
-    $('#simStringsBlock').hidden = !toInstrument;
+    $('#simStringsBlock').hidden = !(to === 'instrument' || to === 'add');
     // Mientras dura el deslizamiento se ven las dos pantallas, así que hay que dibujar ambas.
+    S.transitionFrom = from;
     S.transitionUntil = performance.now() + 360;
+    fitTitles();
     tick();
+  }
+
+  // ================================================================= afinaciones propias
+  const LIST_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 5h12M9 12h12M9 19h12"/><circle cx="4" cy="5" r="1.8" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="4" cy="19" r="1.8" fill="currentColor" stroke="none"/></svg>';
+  const TRASH_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M9 6V3.5h6V6M6 6l1 14.5h10L18 6M10 10v7M14 10v7"/></svg>';
+  let addCards = [];
+
+  // Botón de la esquina: el "+" gira hasta ser una "×" y despliega sus dos opciones.
+  function setMenu(open) {
+    S.menuOpen = open;
+    $('#tuningMenu').classList.toggle('open', open);
+    $('#menuScrim').classList.toggle('open', open);
+    const button = $('#menuBtn');
+    button.setAttribute('aria-expanded', String(open));
+    button.setAttribute('aria-label', open ? 'Cerrar opciones de afinación' : 'Opciones de afinación');
+  }
+
+  /**
+   * Afinación nueva con tantas cuerdas como la que está en uso. Salen con su número y la
+   * primera (la más grave) queda elegida para empezar sin más toques.
+   */
+  function openAdd() {
+    setMenu(false);
+    stopTone();
+    tracker.reset();
+    capture.reset();
+    S.selectedString = null;
+    const base = currentTuning();
+    const strings = [...base.strings].sort((a, b) => b.number - a.number);
+    S.add = { base, order: strings.map((s) => s.number), captured: {}, selected: strings[0].number };
+    setText($('#addSub'), `${S.instrument.name} · ${strings.length} cuerdas`);
+    renderAvatars();
+    addCards = buildCards(el.addStrings, strings, (n) => `Afinar la cuerda ${n}`, selectAddString);
+    dials.add.cents.snap(0);
+    dials.add.color = null;
+    navigate('add');
+  }
+
+  const addComplete = () => S.add.order.every((n) => S.add.captured[n] != null);
+
+  /** Elegir una cuerda de la afinación nueva no suena: aún no tiene nota. */
+  function selectAddString(number) {
+    capture.restart();
+    S.add.selected = number;
+  }
+
+  /** Fija la nota en la cuerda elegida y pasa a la siguiente que siga sin nota. */
+  function captureNote(midi) {
+    const a = S.add;
+    const number = a.selected;
+    a.captured[number] = midi;
+    wave(addCards, number);
+    const start = a.order.indexOf(number);
+    a.selected = null;
+    for (let i = 1; i <= a.order.length; i++) {
+      const next = a.order[(start + i) % a.order.length];
+      if (a.captured[next] == null) { a.selected = next; break; }
+    }
+  }
+
+  function renderAdd(dt, scan) {
+    const a = S.add;
+    const c = S.colors;
+    const r = S.reading;
+    const selected = a.selected;
+    // Se escucha como el afinador cromático: la nota más cercana, sea cual sea. La que se
+    // acaba de fijar y aún resuena no cuenta para la cuerda siguiente.
+    const active = !!(r && r.hasSignal && selected != null && r.nearest !== capture.blocked);
+    const cents = active ? r.cents : 0;
+    const v = {
+      hasSignal: active,
+      cents,
+      inTune: active && Math.abs(cents) <= IN_TUNE_CENTS,
+      note: active ? noteName(r.nearest, S.accidental) : null,
+      lower: active ? noteName(r.nearest - 1, S.accidental) : null,
+      upper: active ? noteName(r.nearest + 1, S.accidental) : null,
+      emptyLabel: 'Toca la cuerda elegida',
+    };
+    renderDial(dials.add, v, dt, scan);
+    const color = dials.add.color;
+
+    setText(stats.add.values[0], active ? formatHz(r.freq) : '— Hz');
+    setText(stats.add.values[1], active ? formatCents(cents) : '— ¢');
+    setText(stats.add.values[2], active ? formatHz(midiToFreq(r.nearest, S.a4)) : '— Hz');
+
+    const complete = addComplete();
+    let text;
+    if (selected == null) text = complete ? 'Todas las cuerdas tienen nota' : 'Elige una cuerda para afinarla';
+    else if (!active) text = `Toca la cuerda ${selected} en la nota que quieras`;
+    else if (v.inTune) text = `Cuerda ${selected} en ${v.note.label} · mantenla`;
+    else if (cents < 0) text = `Cuerda ${selected} grave · sube`;
+    else text = `Cuerda ${selected} aguda · baja`;
+    renderStatus(el.statusAdd, text, selected == null ? c.inTune : color, selected != null && !active, selected != null && !active);
+
+    for (const card of addCards) {
+      const captured = a.captured[card.n];
+      const live = active && card.n === selected;
+      const shown = live ? r.nearest : captured;
+      const placeholder = shown == null;
+      paintCard(card, {
+        isActive: live,
+        isSelected: card.n === selected,
+        isTuned: captured != null,
+        cents,
+        color,
+        placeholder,
+        num: placeholder ? '' : String(card.n),
+        note: placeholder ? String(card.n) : noteName(shown, S.accidental).label,
+        hz: live ? r.freq.toFixed(1) : captured != null ? midiToFreq(captured, S.a4).toFixed(1) : '—',
+      }, dt);
+    }
+
+    const done = a.order.filter((n) => a.captured[n] != null).length;
+    setText(el.addHint, complete ? 'Lista para guardar' : `${done} de ${a.order.length} cuerdas afinadas · guarda al terminar`);
+    el.addHint.classList.toggle('done', complete);
+    // Guardar se desbloquea cuando todas las cuerdas tienen nota.
+    if (el.saveBtn.disabled === complete) el.saveBtn.disabled = !complete;
+  }
+
+  function openSaveDialog() {
+    if (!S.add || !addComplete()) return;
+    const count = S.saved.filter((t) => t.inst === S.instrument.id).length;
+    openDialog({
+      title: 'Guardar afinación',
+      body: 'Ponle un nombre para encontrarla en Afinaciones.',
+      input: `Mi afinación ${count + 1}`,
+      confirm: 'Guardar',
+      onConfirm: (name) => {
+        const a = S.add;
+        const entry = {
+          id: Date.now(),
+          inst: S.instrument.id,
+          name: name.trim(),
+          midis: a.base.strings.map((s) => a.captured[s.number]),
+        };
+        S.saved.push(entry);
+        persistSaved();
+        showInstrument(`saved:${entry.id}`, true);
+      },
+    });
+  }
+
+  /** Vuelve a afinar el instrumento con `key`; `retune` deja el simulador en su cuerda más grave. */
+  function showInstrument(key, retune) {
+    S.tuningKey = key;
+    tracker.reset();
+    capture.reset();
+    stopTone();
+    S.selectedString = null;
+    buildInstrumentScreen();
+    dials.instrument.cents.snap(0);
+    dials.instrument.color = null;
+    if (retune) {
+      const lowest = currentTuning().strings.reduce((a, b) => (a.midi < b.midi ? a : b));
+      setSim(lowest.midi, randomOffset());
+    }
+    navigate('instrument');
+  }
+
+  function backToInstrument() {
+    showInstrument(S.tuningKey, false);
+  }
+
+  function openSaved() {
+    setMenu(false);
+    stopTone();
+    tracker.reset();
+    S.selectedString = null;
+    setText($('#savedSub'), `${S.instrument.name} · ${currentType().name}`);
+    renderAvatars();
+    renderSaved();
+    navigate('saved');
+  }
+
+  /** Tipos del instrumento: cuántas cuerdas tiene. Elegir uno afina con su estándar. */
+  function openTypes() {
+    setMenu(false);
+    stopTone();
+    tracker.reset();
+    S.selectedString = null;
+    setText($('#typesSub'), S.instrument.name);
+    renderAvatars();
+    const current = currentType();
+    $('#typesBody').innerHTML = `
+      <p class="types-hint">Cuántas cuerdas tiene tu instrumento. Las afinaciones y Agregar afinación usan las cuerdas del tipo elegido.</p>
+      <div class="saved-list">${S.instrument.types.map((type, i) => {
+        const inUse = type === current;
+        const count = tuningsOf(S.instrument, type).length;
+        return `
+        <div class="saved-row${inUse ? ' in-use' : ''}">
+          <button class="saved-main" data-type="${i}">
+            <span class="sr-title"><b>${type.name}</b>${inUse ? '<span class="sr-badge">EN USO</span>' : ''}</span>
+            <span class="sr-sub">${stringLabels(type.tunings[0], S.accidental)} · ${count} ${count === 1 ? 'afinación' : 'afinaciones'}</span>
+          </button>
+        </div>`;
+      }).join('')}
+      </div>`;
+    navigate('types');
+  }
+
+  function onTypesClick(e) {
+    const button = e.target.closest('[data-type]');
+    if (!button) return;
+    const type = S.instrument.types[Number(button.dataset.type)];
+    // El mismo tipo conserva la afinación que hubiera (Drop D sigue siendo de 6 cuerdas).
+    if (type === currentType()) return showInstrument(S.tuningKey, false);
+    showInstrument(type.tunings[0].key, true);
+  }
+
+  /**
+   * Afinaciones del tipo en uso: primero las que trae la app y debajo las guardadas, que se
+   * pueden borrar. La que está en uso va marcada.
+   */
+  function renderSaved() {
+    const type = currentType();
+    const saved = S.saved.filter((t) => t.inst === S.instrument.id && t.midis.length === type.count);
+    const row = (tuning, name, deletable) => {
+      const inUse = tuning.key === S.tuningKey;
+      return `
+        <div class="saved-row${inUse ? ' in-use' : ''}">
+          <button class="saved-main" data-apply="${tuning.key}">
+            <span class="sr-title"><b>${esc(name)}</b>${inUse ? '<span class="sr-badge">EN USO</span>' : ''}</span>
+            <span class="sr-sub">${stringLabels(tuning, S.accidental)}</span>
+          </button>
+          ${deletable ? `<button class="icon-circle ghost" data-delete="${tuning.saved.id}" aria-label="Borrar ${esc(name)}">${TRASH_ICON}</button>` : ''}
+        </div>`;
+    };
+    $('#savedBody').innerHTML = `
+      <div class="saved-list">
+        <div class="section-label">PREDETERMINADAS</div>
+        ${type.tunings.map((t) => row(t, t.name, false)).join('')}
+        <div class="section-label list-gap">GUARDADAS · ${saved.length}</div>
+        ${saved.length ? saved.map((entry) => row(savedTuning(entry), entry.name, true)).join('') : `
+        <div class="saved-empty">
+          <p>Aún no tienes afinaciones de ${type.name} guardadas. Créalas con Agregar afinación.</p>
+          <button class="btn-secondary touch" data-saved-act="add">Agregar afinación</button>
+        </div>`}
+      </div>`;
+  }
+
+  function onSavedClick(e) {
+    const button = e.target.closest('button');
+    if (!button) return;
+    if (button.dataset.savedAct === 'add') return openAdd();
+    if (button.dataset.apply) return showInstrument(button.dataset.apply, button.dataset.apply !== S.tuningKey);
+    const entry = S.saved.find((t) => String(t.id) === button.dataset.delete);
+    if (!entry) return;
+    openDialog({
+      title: '¿Borrar la afinación?',
+      body: `«${entry.name}» se borrará de este teléfono.`,
+      confirm: 'Borrar',
+      onConfirm: () => {
+        // El tipo se mira antes de borrarla: después ya no se encuentra.
+        const type = typeOf(S.instrument, savedTuning(entry));
+        S.saved = S.saved.filter((t) => t.id !== entry.id);
+        persistSaved();
+        // Si se borra la que estaba en uso, al volver se afina con la estándar de su tipo.
+        if (S.tuningKey === `saved:${entry.id}`) S.tuningKey = type.tunings[0].key;
+        renderSaved();
+      },
+    });
+  }
+
+  // ---------------------------------------------------------------- diálogos (TunerDialog)
+  let dialogConfirm = null;
+  function openDialog({ title, body, input, confirm, onConfirm }) {
+    const d = el.dialog;
+    d.innerHTML = `
+      <h3 id="dialogTitle"></h3>
+      <p></p>
+      ${input != null ? '<input type="text" maxlength="32" aria-labelledby="dialogTitle" autocomplete="off">' : ''}
+      <div class="dialog-actions">
+        <button class="btn-ghost" data-dialog="cancel">Cancelar</button>
+        <button class="btn-primary touch" data-dialog="ok"><span></span></button>
+      </div>`;
+    setText($('h3', d), title);
+    setText($('p', d), body);
+    setText($('[data-dialog="ok"] span', d), confirm);
+    const field = $('input', d);
+    const ok = $('[data-dialog="ok"]', d);
+    if (field) {
+      // Con un nombre ya puesto y seleccionado: aceptar sin más también vale.
+      field.value = input;
+      field.addEventListener('input', () => { ok.disabled = !field.value.trim(); });
+      field.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && field.value.trim()) { e.preventDefault(); ok.click(); }
+      });
+    }
+    dialogConfirm = () => onConfirm(field ? field.value : undefined);
+    S.dialog = true;
+    el.dialogScrim.classList.add('open');
+    if (field) setTimeout(() => { field.focus(); field.select(); }, 60);
+    else ok.focus();
+  }
+  function closeDialog() {
+    S.dialog = false;
+    dialogConfirm = null;
+    el.dialogScrim.classList.remove('open');
+  }
+  function onDialogClick(e) {
+    if (e.target === el.dialogScrim) return closeDialog();
+    const button = e.target.closest('[data-dialog]');
+    if (!button) return;
+    const confirm = button.dataset.dialog === 'ok' ? dialogConfirm : null;
+    closeDialog();
+    if (confirm) confirm();
   }
 
   // ---------------------------------------------------------------- cuerda de referencia (Karplus-Strong, como ReferenceTonePlayer)
@@ -918,10 +1336,10 @@
     ? `<img src="${neonSrc(icon)}" alt="">`
     : lineIcon(icon, ''));
 
-  function tuningOptionsHTML(inst, selectedIndex) {
-    return `<div class="options" role="radiogroup">${inst.tunings.map((t, i) => `
-      <button class="option" role="radio" aria-checked="${i === selectedIndex}" data-tuning="${i}">
-        <span class="o-main"><span class="o-title">${t.name}</span><span class="o-sub">${stringLabels(t, S.accidental)}</span></span>
+  function typeOptionsHTML(inst, selectedIndex) {
+    return `<div class="options" role="radiogroup">${inst.types.map((type, i) => `
+      <button class="option" role="radio" aria-checked="${i === selectedIndex}" data-type="${i}">
+        <span class="o-main"><span class="o-title">${type.name}</span><span class="o-sub">${stringLabels(type.tunings[0], S.accidental)}</span></span>
         <span class="radio"></span>
       </button>`).join('')}</div>`;
   }
@@ -941,8 +1359,8 @@
       <div class="options" role="radiogroup" id="instOptions">${INSTRUMENTS.map((i) => `
         <button class="option" role="radio" aria-checked="${i.id === inst.id}" data-inst="${i.id}">
           ${lineIcon(i.icon)}
-          <span class="o-main"><span class="o-title">${i.name}</span><span class="o-sub">${stringLabels(i.tunings[0], S.accidental)}</span></span>
-          <span class="o-count">${i.tunings.length > 1 ? `${i.tunings.length} tipos` : '1 tipo'}</span>
+          <span class="o-main"><span class="o-title">${i.name}</span><span class="o-sub">${stringLabels(i.types[0].tunings[0], S.accidental)}</span></span>
+          <span class="o-count">${i.types.length > 1 ? `${i.types.length} tipos` : '1 tipo'}</span>
           <span class="radio"></span>
         </button>`).join('')}
       </div>
@@ -957,24 +1375,24 @@
       </div>`;
   }
   function pickTuningsHTML(inst) {
-    const many = inst.tunings.length > 1;
+    if (inst.types.length < 2) return '';
     return `
-      <div class="section-label">${many ? 'TIPO' : 'AFINACIÓN'}</div>
-      <div class="hint">${many ? 'Cuántas cuerdas tiene el tuyo o en qué afinación está.' : 'Este instrumento tiene una sola afinación estándar.'}</div>
+      <div class="section-label">TIPO</div>
+      <div class="hint">Cuántas cuerdas tiene el tuyo. Sus afinaciones están en el botón de abajo a la izquierda.</div>
       <div class="sp-12"></div>
-      ${tuningOptionsHTML(inst, S.pick.tuning)}`;
+      ${typeOptionsHTML(inst, S.pick.type)}`;
   }
   function pickHint() {
     const inst = instrumentById(S.pick.inst);
-    const label = inst.tunings.length > 1 ? `${inst.name} · ${inst.tunings[S.pick.tuning].name}` : inst.name;
+    const label = inst.types.length > 1 ? `${inst.name} · ${inst.types[S.pick.type].name}` : inst.name;
     return `Al aceptar verás la afinación de ${label}.`;
   }
 
   function openSheet() {
     S.sheet = 'identify';
     S.pick = S.instrument
-      ? { inst: S.instrument.id, tuning: S.tuningIndex }
-      : { inst: 'GUITAR', tuning: 0 };
+      ? { inst: S.instrument.id, type: S.instrument.types.indexOf(currentType()) }
+      : { inst: 'GUITAR', type: 0 };
     el.sheetBody.innerHTML = identifyHTML();
     el.sheetBody.scrollTop = 0;
     el.sheet.style.transform = '';
@@ -1000,7 +1418,7 @@
 
     if (target.dataset.inst) {
       if (S.pick.inst === target.dataset.inst) return;
-      S.pick = { inst: target.dataset.inst, tuning: 0 };
+      S.pick = { inst: target.dataset.inst, type: 0 };
       const inst = instrumentById(S.pick.inst);
       $$('#instOptions .option').forEach((o) => o.setAttribute('aria-checked', String(o.dataset.inst === inst.id)));
       const glyph = $('#pickNeon');
@@ -1013,9 +1431,9 @@
       return;
     }
 
-    if (target.dataset.tuning != null) {
+    if (target.dataset.type != null) {
       target.parentElement.querySelectorAll('.option').forEach((o) => o.setAttribute('aria-checked', String(o === target)));
-      S.pick.tuning = Number(target.dataset.tuning);
+      S.pick.type = Number(target.dataset.type);
       setText($('#pickHint'), pickHint());
     }
   }
@@ -1080,7 +1498,7 @@
       img.src = isDark() ? 'assets/logo/logo_neon.png' : 'assets/logo/logo_line.png';
       img.parentElement.classList.toggle('line', !isDark());
     });
-    if (S.instrument) el.instAvatar.innerHTML = instrumentGlyph(S.instrument.icon);
+    renderAvatars();
     drawModeIcons();
     dials.chromatic.color = null;
     dials.instrument.color = null;
@@ -1111,6 +1529,19 @@
     node.classList.add('spinning');
     clearTimeout(node._spinTimer);
     node._spinTimer = setTimeout(() => node.classList.remove('spinning'), 700);
+  }
+
+  // El título de la cabecera también se reduce si no cabe ("Nueva afinación", "Violonchelo").
+  function fitTitles() {
+    $$('.inst-name').forEach((title) => {
+      if (!title.clientWidth) return;
+      let size = 22;
+      title.style.fontSize = `${size}px`;
+      while (title.scrollWidth > title.clientWidth && size > 16) {
+        size -= 0.5;
+        title.style.fontSize = `${size}px`;
+      }
+    });
   }
 
   // El texto del botón principal se reduce si no cabe (TextAutoSize.StepBased).
@@ -1217,16 +1648,31 @@
       chromaticScreen: $('#chromaticScreen'), instrumentScreen: $('#instrumentScreen'),
       statusChromatic: $('[data-status="chromatic"]'), statusInstrument: $('[data-status="instrument"]'),
       instName: $('#instName'), instAvatar: $('#instAvatar'),
-      tuningSelector: $('#tuningSelector'), tuningChips: $('#tuningChips'),
       strings: $('#strings'), footerHint: $('#footerHint'),
       scrim: $('#scrim'), sheet: $('#sheet'), sheetBody: $('#sheetBody'), dragZone: $('#dragZone'),
+      statusAdd: $('[data-status="add"]'), addStrings: $('#addStrings'), addHint: $('#addHint'),
+      saveBtn: $('#saveTuningBtn'), dialog: $('#dialog'), dialogScrim: $('#dialogScrim'),
     });
-    dials = { chromatic: createVisor($('[data-visor="chromatic"]')), instrument: createVisor($('[data-visor="instrument"]')) };
-    stats = { chromatic: createStats($('[data-stats="chromatic"]')), instrument: createStats($('[data-stats="instrument"]')) };
+    el.screens = {
+      chromatic: el.chromaticScreen, instrument: el.instrumentScreen, add: $('#addScreen'), saved: $('#savedScreen'),
+      types: $('#typesScreen'),
+    };
+    dials = {
+      chromatic: createVisor($('[data-visor="chromatic"]')),
+      instrument: createVisor($('[data-visor="instrument"]')),
+      add: createVisor($('[data-visor="add"]')),
+    };
+    stats = {
+      chromatic: createStats($('[data-stats="chromatic"]')),
+      instrument: createStats($('[data-stats="instrument"]')),
+      add: createStats($('[data-stats="add"]')),
+    };
 
     el.instrumentScreen.classList.remove('hidden-right');
-    Object.assign(el.instrumentScreen.style, { transform: 'translateX(100%)', opacity: '0', pointerEvents: 'none' });
-    el.instrumentScreen.setAttribute('aria-hidden', 'true');
+    for (const layer of [el.instrumentScreen, el.screens.add, el.screens.saved, el.screens.types]) {
+      Object.assign(layer.style, { transform: 'translateX(100%)', opacity: '0', pointerEvents: 'none' });
+      layer.setAttribute('aria-hidden', 'true');
+    }
 
     applyMode(S.theme);
     setAccidental('SHARPS');
@@ -1237,18 +1683,26 @@
     }));
     $$('[data-toggle-theme]').forEach((b) => b.addEventListener('click', toggleMode));
     $('#identifyBtn').addEventListener('click', openSheet);
-    el.tuningChips.addEventListener('click', (e) => {
-      const chip = e.target.closest('[data-tuning]');
-      if (chip) setTuning(Number(chip.dataset.tuning));
-    });
     $('#backBtn').addEventListener('click', closeInstrumentTuning);
     $('#appLogo').addEventListener('click', (e) => spin(e.currentTarget));
-    el.instAvatar.addEventListener('click', (e) => spin(e.currentTarget));
+    $$('[data-inst-avatar], #instAvatar').forEach((avatar) => avatar.addEventListener('click', (e) => spin(e.currentTarget)));
+    $('#menuBtn').addEventListener('click', () => setMenu(!S.menuOpen));
+    $('#menuScrim').addEventListener('click', () => setMenu(false));
+    const menuActions = { add: openAdd, saved: openSaved, types: openTypes };
+    $$('.menu-option').forEach((option) => option.addEventListener('click', () => menuActions[option.dataset.menu]()));
+    $('#typesBody').addEventListener('click', onTypesClick);
+    $$('[data-back]').forEach((button) => button.addEventListener('click', backToInstrument));
+    el.saveBtn.addEventListener('click', openSaveDialog);
+    $('#savedBody').addEventListener('click', onSavedClick);
+    el.dialogScrim.addEventListener('click', onDialogClick);
     el.scrim.addEventListener('click', closeSheet);
     el.sheetBody.addEventListener('click', onSheetClick);
     document.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
-      if (S.sheet) closeSheet();
+      if (S.dialog) closeDialog();
+      else if (S.menuOpen) setMenu(false);
+      else if (S.sheet) closeSheet();
+      else if (S.mode === 'add' || S.mode === 'saved' || S.mode === 'types') backToInstrument();
       else if (S.mode === 'instrument') closeInstrumentTuning();
     });
     setupDrag();
@@ -1257,10 +1711,10 @@
     renderTokenCards();
 
     fitPhone();
-    window.addEventListener('resize', () => { fitPhone(); fitPrimaryButton(); });
+    window.addEventListener('resize', () => { fitPhone(); fitPrimaryButton(); fitTitles(); });
     updateClock();
     setInterval(updateClock, 15000);
-    if (document.fonts) document.fonts.ready.then(fitPrimaryButton);
+    if (document.fonts) document.fonts.ready.then(() => { fitPrimaryButton(); fitTitles(); });
     fitPrimaryButton();
 
     tick();
@@ -1273,9 +1727,11 @@
       last = now;
       stepAutoTune(now);
       const scan = ((now - t0) % 3200) / 3200;
-      const both = now < S.transitionUntil;
-      if (both || S.mode === 'chromatic') renderChromatic(dt, scan);
-      if (S.instrument && (both || S.mode === 'instrument')) renderInstrument(dt, scan);
+      const sliding = now < S.transitionUntil;
+      const showing = (mode) => S.mode === mode || (sliding && S.transitionFrom === mode);
+      if (showing('chromatic')) renderChromatic(dt, scan);
+      if (S.instrument && showing('instrument')) renderInstrument(dt, scan);
+      if (S.add && showing('add')) renderAdd(dt, scan);
       requestAnimationFrame(frame);
     };
     requestAnimationFrame(frame);

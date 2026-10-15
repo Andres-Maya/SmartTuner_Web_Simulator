@@ -99,12 +99,6 @@
                 <button class="icon-circle" data-toggle-theme aria-label="Cambiar al modo claro"><svg class="mode-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"></svg></button>
               </div>
 
-              <!-- Las variantes a la vista: cambiar de 5 cuerdas a 4 es un toque, sin menús. -->
-              <div class="tuning-selector" id="tuningSelector" hidden>
-                <span class="overline">TIPO</span>
-                <div class="tuning-chips" role="radiogroup" aria-label="Tipo de instrumento" id="tuningChips"></div>
-              </div>
-
               <div class="weight"></div>
               <div class="visor" data-visor="instrument"></div>
               <div class="gap-md"></div>
@@ -117,6 +111,92 @@
               <div class="gap-md"></div>
               <div class="footer-hint" id="footerHint"></div>
               <div class="weight"></div>
+              <!-- Hueco para el botón de afinaciones, que flota en la esquina. -->
+              <div class="fab-gap"></div>
+            </div>
+
+            <!-- Botón de afinaciones (TuningMenu.kt): despliega sus dos opciones hacia arriba. -->
+            <div class="menu-scrim" id="menuScrim"></div>
+            <div class="tuning-menu" id="tuningMenu">
+              <button class="menu-option" data-menu="types">
+                <span class="mo-icon"><span class="mo-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" aria-hidden="true"><path d="M3 4h18" stroke-width="2.6"/><path d="M6 4v17M10 4v17M14 4v17M18 4v17" stroke-width="1.6"/></svg></span></span>
+                <span class="mo-label">Tipo</span>
+              </button>
+              <button class="menu-option" data-menu="saved">
+                <span class="mo-icon"><span class="mo-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 5h12M9 12h12M9 19h12"/><circle cx="4" cy="5" r="1.8" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="4" cy="19" r="1.8" fill="currentColor" stroke="none"/></svg></span></span>
+                <span class="mo-label">Afinaciones</span>
+              </button>
+              <button class="menu-option" data-menu="add">
+                <span class="mo-icon"><span class="mo-circle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3v7c0 4 8 4 8 0V3M9 13v8M19 3.5v7M15.5 7h7"/></svg></span></span>
+                <span class="mo-label">Agregar afinación</span>
+              </button>
+              <button class="btn-icon fab touch" id="menuBtn" aria-label="Opciones de afinación" aria-expanded="false">
+                <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M11 2.2v17.6M2.2 11h17.6" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </section>
+
+          <!-- =================== NUEVA AFINACIÓN =================== -->
+          <section class="screen-layer" id="addScreen">
+            <div class="col">
+              <div class="inst-header">
+                <button class="icon-circle" data-back aria-label="Volver a la afinación del instrumento"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.88 1.92 4.48 8l6.4 6.08" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button class="neon spin avatar" data-inst-avatar aria-label=""></button>
+                <div class="inst-titles">
+                  <div class="inst-name">Nueva afinación</div>
+                  <span class="ref-note" id="addSub"></span>
+                </div>
+                <button class="icon-circle" data-toggle-theme aria-label="Cambiar al modo claro"><svg class="mode-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"></svg></button>
+              </div>
+
+              <div class="weight"></div>
+              <div class="visor" data-visor="add"></div>
+              <div class="gap-md"></div>
+              <div class="stats" data-stats="add"></div>
+              <div class="gap-md"></div>
+              <div class="status-text" data-status="add"></div>
+              <div class="weight"></div>
+
+              <!-- Cada cuerda sale con su número hasta que se afina; tocarla no suena. -->
+              <div class="strings" id="addStrings" role="radiogroup"></div>
+              <div class="gap-md"></div>
+              <div class="footer-hint" id="addHint"></div>
+              <div class="weight"></div>
+              <button class="btn-primary lg touch" id="saveTuningBtn" disabled><span>Guardar afinación</span></button>
+            </div>
+          </section>
+
+          <!-- =================== AFINACIONES GUARDADAS =================== -->
+          <section class="screen-layer" id="savedScreen">
+            <div class="col">
+              <div class="inst-header">
+                <button class="icon-circle" data-back aria-label="Volver a la afinación del instrumento"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.88 1.92 4.48 8l6.4 6.08" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button class="neon spin avatar" data-inst-avatar aria-label=""></button>
+                <div class="inst-titles">
+                  <div class="inst-name">Afinaciones</div>
+                  <span class="ref-note" id="savedSub"></span>
+                </div>
+                <button class="icon-circle" data-toggle-theme aria-label="Cambiar al modo claro"><svg class="mode-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"></svg></button>
+              </div>
+              <div class="sp-24"></div>
+              <div class="saved-body" id="savedBody"></div>
+            </div>
+          </section>
+
+          <!-- =================== TIPO =================== -->
+          <section class="screen-layer" id="typesScreen">
+            <div class="col">
+              <div class="inst-header">
+                <button class="icon-circle" data-back aria-label="Volver a la afinación del instrumento"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.88 1.92 4.48 8l6.4 6.08" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button class="neon spin avatar" data-inst-avatar aria-label=""></button>
+                <div class="inst-titles">
+                  <div class="inst-name">Tipo</div>
+                  <span class="ref-note" id="typesSub"></span>
+                </div>
+                <button class="icon-circle" data-toggle-theme aria-label="Cambiar al modo claro"><svg class="mode-icon" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"></svg></button>
+              </div>
+              <div class="sp-24"></div>
+              <div class="saved-body" id="typesBody"></div>
             </div>
           </section>
 
@@ -125,6 +205,11 @@
           <div class="sheet" id="sheet" role="dialog" aria-modal="true">
             <div class="drag-zone" id="dragZone"><div class="handle"></div></div>
             <div class="sheet-body" id="sheetBody"></div>
+          </div>
+
+          <!-- Diálogos de guardar y borrar (TunerDialog en Dialogs.kt). -->
+          <div class="dialog-scrim" id="dialogScrim">
+            <div class="dialog" id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"></div>
           </div>
         </div>
 
@@ -176,6 +261,7 @@
       <li>Pulsa el botón de la <b>IA</b> (✦), abajo a la derecha: aparece la lista de instrumentos y sus afinaciones.</li>
       <li>Elige instrumento y tipo, y pulsa <b>Aceptar</b>.</li>
       <li>Toca una tarjeta de cuerda para oír su referencia y afínala con el simulador.</li>
+      <li>El botón <b>+</b> de abajo a la izquierda abre <b>Tipo</b> (6, 7 u 8 cuerdas…), <b>Afinaciones</b> (las de la app y las guardadas) y <b>Agregar afinación</b>. Al agregar, elige una cuerda, pon la nota que quieras con − / + y pulsa <b>Afinar poco a poco</b>: al sostenerse afinada queda fijada y se pasa a la siguiente.</li>
       <li><kbd>Esc</kbd> hace de botón Atrás de Android.</li>
     </ol>
   </aside>
@@ -215,7 +301,8 @@
         <li><b>Espaciado, formas y tamaños:</b> los mismos tokens; solo cambian colores y qué se dibuja.</li>
         <li><b>Una pantalla, una acción:</b> en ambos modos el afinador muestra visor, lecturas y estado, y nada más. <b>Identificar instrumento</b> es un botón con solo el símbolo de la IA en la esquina inferior derecha, y el selector ♯/♭ va abajo en el centro, un poco más arriba; al tocarlo, un aviso de un segundo dice qué notación se verá. En la afinación por instrumento el selector no aparece.</li>
         <li><b>Cuerdas:</b> la misma tarjeta con borde en los dos modos; el borde toma el color del estado (sonando, afinada o elegida).</li>
-        <li><b>Tipo de instrumento:</b> las variantes (4, 5 o 6 cuerdas…) van como fichas bajo la cabecera, visibles sin abrir ningún menú.</li>
+        <li><b>Afinación en uso:</b> la cabecera dice el tipo y la afinación (p. ej. «6 cuerdas · Drop D · La 440»); se cambian desde el botón redondo, sin fichas duplicadas encima del visor.</li>
+        <li><b>Afinaciones propias:</b> el botón redondo de la esquina inferior izquierda despliega <b>Tipo</b> (cejuela con cuerdas: 6, 7 u 8 cuerdas…), <b>Afinaciones</b> (lista con las de la app y las guardadas) y <b>Agregar afinación</b> (diapasón con +), que usa las cuerdas del tipo elegido. Al agregar, las cuerdas salen con su número y no suenan; cada una toma la nota que se sostenga afinada, y <b>Guardar</b> se desbloquea al tener todas.</li>
         <li><b>Arranque:</b> la app sigue al modo del sistema hasta que alguien toca el botón; a partir de ahí manda esa elección.</li>
       </ul>
     </article>

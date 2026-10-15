@@ -192,11 +192,11 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   background: var(--surface-high); color: var(--text);
   position: relative; overflow: hidden;
 }
-.icon-circle::after, .touch::after, .option::after, .string-card::after, .btn-secondary::after, .tuning-chip::after {
+.icon-circle::after, .touch::after, .option::after, .string-card::after, .btn-secondary::after {
   content: ""; position: absolute; inset: 0; border-radius: inherit;
   background: currentColor; opacity: 0; transition: opacity 150ms; pointer-events: none;
 }
-.icon-circle:active::after, .touch:active::after, .option:active::after, .string-card:active::after, .btn-secondary:active::after, .tuning-chip:active::after { opacity: .12; }
+.icon-circle:active::after, .touch:active::after, .option:active::after, .string-card:active::after, .btn-secondary:active::after { opacity: .12; }
 .inst-header .icon-circle:first-child { margin-left: 0; }
 
 /* ---------------------------------------------------------------- visor */
@@ -257,6 +257,10 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   color: var(--on-accent); font-size: 16px; font-weight: 600; white-space: nowrap;
 }
 .btn-primary.lg { height: 52px; }
+/* Acción que se desbloquea más tarde: apagada y sin respuesta hasta entonces. */
+.btn-primary { transition: opacity 250ms; }
+.btn-primary:disabled { opacity: .35; cursor: default; }
+.btn-primary:disabled::after { display: none; }
 /* PrimaryIconButton: la acción principal reducida a su símbolo. */
 .btn-icon {
   position: absolute; right: 0; bottom: 0; overflow: hidden;
@@ -277,18 +281,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .inst-titles { flex: 1; min-width: 0; margin-left: 8px; }
 .inst-name { font-size: 22px; font-weight: 700; line-height: 28px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 /* Selector de variante: las alternativas a la vista, no escondidas en un menú. */
-.tuning-selector { width: 100%; margin-top: 12px; }
-.tuning-chips { display: flex; gap: 8px; margin-top: 8px; overflow-x: auto; scrollbar-width: none; }
-.tuning-chips::-webkit-scrollbar { display: none; }
-.tuning-chip {
-  position: relative; overflow: hidden; flex: none;
-  padding: 8px 16px; border-radius: 999px;
-  background: var(--surface-high); color: var(--muted);
-  font-size: 14px; font-weight: 600; line-height: 16px; white-space: nowrap;
-  transition: background-color 200ms, color 200ms;
-}
-.tuning-chip[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
-.ref-note { font-size: 12px; line-height: 17px; color: var(--muted); }
+.ref-note { display: block; font-size: 12px; line-height: 17px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------------------------------------------------------------- tarjetas de cuerda */
 .strings { width: 100%; display: flex; gap: 4px; }
@@ -304,7 +297,7 @@ button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   will-change: transform;
 }
 .string-card .flag { width: 16px; height: 3px; border-radius: 2px; margin-bottom: 2px; background: transparent; transition: background-color 200ms; }
-.string-card .sc-num { font-size: 11px; font-weight: 600; letter-spacing: 1px; line-height: 16px; transition: color 200ms; }
+.string-card .sc-num { font-size: 11px; font-weight: 600; letter-spacing: 1px; line-height: 16px; min-height: 16px; transition: color 200ms; }
 .string-card .sc-note { font-size: 17px; font-weight: 600; line-height: 22px; white-space: nowrap; }
 .string-card .sc-hz { font-size: 10px; line-height: 13px; color: var(--muted); white-space: nowrap; }
 .sc-wrap .ring {
@@ -467,3 +460,90 @@ kbd { font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius
   .stage { gap: 24px; }
   .sim { width: 100%; max-width: 420px; }
 }
+
+/* ================================================================ afinaciones propias */
+/* Botón de la esquina inferior izquierda (TuningMenu.kt) y sus dos opciones. */
+.fab-gap { height: 52px; }
+.menu-scrim {
+  position: absolute; inset: 0; z-index: 5;
+  background: color-mix(in srgb, var(--bg-deep) 72%, transparent);
+  opacity: 0; pointer-events: none; transition: opacity 200ms;
+}
+.menu-scrim.open { opacity: 1; pointer-events: auto; }
+.tuning-menu {
+  position: absolute; left: 20px; bottom: 32px; z-index: 6;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
+}
+.tuning-menu .fab { position: relative; right: auto; bottom: auto; }
+.tuning-menu .fab svg { transition: transform 250ms var(--fast-out-slow-in); }
+.tuning-menu.open .fab svg { transform: rotate(135deg); }
+.menu-option {
+  display: flex; align-items: center; gap: 8px; border-radius: 999px;
+  opacity: 0; transform: translateY(16px) scale(.6); transform-origin: 26px 50%;
+  visibility: hidden; pointer-events: none;
+  transition: opacity 120ms, transform 150ms var(--fast-out-slow-in), visibility 0s linear 150ms;
+}
+.tuning-menu.open .menu-option {
+  opacity: 1; transform: none; visibility: visible; pointer-events: auto;
+  transition: opacity 180ms, transform 220ms var(--fast-out-slow-in), visibility 0s;
+}
+/* La más lejana aparece la última, como si salieran del botón. */
+.tuning-menu.open .menu-option:first-child { transition-delay: 60ms; }
+.mo-icon { width: 52px; display: grid; place-items: center; flex: none; }
+.mo-circle {
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface); color: var(--accent);
+  border: 1.5px solid color-mix(in srgb, var(--accent) 60%, transparent);
+}
+.mo-label {
+  padding: 8px 16px; border-radius: 999px; background: var(--surface);
+  font-size: 14px; font-weight: 600; line-height: 16px; color: var(--text); white-space: nowrap;
+}
+.menu-option:hover .mo-label, .menu-option:focus-visible .mo-label { background: color-mix(in srgb, var(--surface) 85%, var(--accent)); }
+
+/* Lista de afinaciones guardadas. */
+.saved-body { width: 100%; flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+.saved-list { flex: 1 1 0; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-top: 8px; scrollbar-width: none; }
+.saved-list::-webkit-scrollbar { display: none; }
+.saved-row {
+  flex: none; display: flex; align-items: center; padding-right: 4px;
+  border-radius: 14px; background: var(--surface); border: 1.5px solid transparent;
+  transition: background-color 200ms, border-color 200ms;
+}
+.saved-row.in-use { background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: var(--accent); }
+.saved-main { position: relative; flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; text-align: left; padding: 12px 12px 12px 16px; border-radius: 14px; }
+.saved-list .list-gap { margin-top: 12px; }
+.saved-list .saved-empty { flex: none; padding: 8px 8px 16px; }
+.saved-list .saved-empty p { margin: 0 0 16px; }
+.types-hint { margin: 0 0 8px; font-size: 14px; line-height: 20px; color: var(--muted); }
+.sr-title { display: flex; align-items: center; gap: 8px; max-width: 100%; font-size: 15px; line-height: 21px; font-weight: 600; color: var(--text); }
+.sr-title b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sr-badge { flex: none; font-size: 11px; font-weight: 600; letter-spacing: 1px; line-height: 16px; color: var(--accent); }
+.sr-sub { max-width: 100%; font-size: 13px; line-height: 18px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.icon-circle.ghost { background: transparent; color: var(--muted); }
+.saved-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 0 8px 64px; }
+.saved-empty > svg { width: 48px; height: 48px; color: var(--accent); }
+.saved-empty h3 { font-size: 22px; font-weight: 700; line-height: 28px; margin: 16px 0 0; }
+.saved-empty p { font-size: 14px; line-height: 20px; color: var(--muted); margin: 8px 0 24px; }
+
+/* Diálogos (TunerDialog). */
+.dialog-scrim {
+  position: absolute; inset: 0; z-index: 25; padding: 24px;
+  display: grid; place-items: center;
+  background: rgba(0, 0, 0, .45);
+  opacity: 0; pointer-events: none; transition: opacity 200ms;
+}
+.dialog-scrim.open { opacity: 1; pointer-events: auto; }
+.dialog { width: 100%; border-radius: 24px; background: var(--surface); color: var(--text); padding: 24px; transform: scale(.94); transition: transform 200ms var(--fast-out-slow-in); }
+.dialog-scrim.open .dialog { transform: none; }
+.dialog h3 { margin: 0; font-size: 22px; font-weight: 700; line-height: 28px; }
+.dialog p { margin: 12px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); }
+.dialog input {
+  width: 100%; margin-top: 12px; padding: 12px 16px; border-radius: 14px;
+  border: 1.5px solid var(--accent); background: var(--surface-high); color: var(--text);
+  font: inherit; font-size: 15px; line-height: 21px; outline: none; caret-color: var(--accent);
+}
+.dialog-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 24px; }
+.btn-ghost { padding: 12px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--muted); }
+.btn-ghost:hover { color: var(--text); }
+.dialog-actions .btn-primary { width: auto; height: 48px; }
